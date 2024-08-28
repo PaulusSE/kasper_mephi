@@ -74,6 +74,11 @@ type DownloadDissertationRequest struct {
 	Semester int32 `json:"semester,omitempty"`
 }
 
+type DownloadPresentationRequest struct {
+	// Семестр
+	Semester int32 `json:"semester,omitempty"`
+}
+
 type UploadDissertationRequest struct {
 	// Семестр
 	Semester int32                 `form:"semester" binding:"required"`

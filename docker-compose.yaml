@@ -9,8 +9,8 @@ services:
     restart: always
     volumes:
       - ./dissertations:/usr/src/app/dissertations
-    extra_hosts:
-      - "database:95.163.231.174"
+    # extra_hosts:
+    #   - "postgres:95.163.231.174"
     environment:
       MAIL_PASSWORD: "vVtVASLsViAdwF6"
     container_name: "kasper-back"
@@ -24,6 +24,19 @@ services:
     depends_on:
       - server
     container_name: "kasper-front"
+  postgres:
+    image: postgres:latest
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: uir_draft
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./new_kasper.sql:/var/desctop.sql
+
 
 networks:
   default:
@@ -31,3 +44,6 @@ networks:
     driver_opts:
       com.docker.network.driver.mtu: 1450
     name: kasper-test
+
+volumes:
+  pgdata:

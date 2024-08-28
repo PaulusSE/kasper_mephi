@@ -229,6 +229,139 @@ func (s *Service) GetStudentsProfile(ctx context.Context, studentID uuid.UUID) (
 	return student, nil
 }
 
+// Метод для получения данных по публикациям студента
+// func (s *Service) GetPublications(ctx context.Context, studentID uuid.UUID) ([]Publication, error) {
+// 	var publications []Publication
+
+// 	err := s.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+// 		ids, err := s.scienceRepo.GetScientificWorksStatusIDs(ctx, tx, studentID)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		// Преобразуйте данные, полученные из базы данных, в нужную структуру
+// 		dbPublications, err := s.scienceRepo.GetPublicationsTx(ctx, tx, ids)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		for _, dbPub := range dbPublications {
+// 			publications = append(publications, Publication{
+// 				Name:       dbPub.Name,
+// 				Status:     string(dbPub.Status),
+// 				Impact:     dbPub.Impact,
+// 				OutputData: dbPub.OutputData,
+// 				CoAuthors:  dbPub.CoAuthors,
+// 				Volume:     dbPub.Volume,
+// 			})
+// 		}
+
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		return nil, errors.Wrap(err, "GetPublications()")
+// 	}
+
+// 	return publications, nil
+// }
+
+// Метод для получения данных по экзаменам студента
+// func (s *Service) GetExams(ctx context.Context, studentID uuid.UUID) ([]Exam, error) {
+// 	var exams []Exam
+
+// 	err := s.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+// 		dbExams, err := s.marksRepo.GetStudentsExamResults(ctx, tx, studentID)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		for _, dbExam := range dbExams {
+// 			exams = append(exams, Exam{
+// 				ExamName: dbExam.ExamName,
+// 				Mark:     dbExam.Mark,
+// 			})
+// 		}
+
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		return nil, errors.Wrap(err, "GetExams()")
+// 	}
+
+// 	return exams, nil
+// }
+
+// Метод для получения данных по педагогической нагрузке студента
+func (s *Service) GetLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error) {
+	var pedagogicalWorks []models.PedagogicalWork
+
+	// Получаем всю педагогическую нагрузку студента
+	teachingLoads, err := s.GetTeachingLoad(ctx, studentID)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetTeachingLoad()")
+	}
+
+	// Проходим по каждому элементу педагогической нагрузки
+	for _, load := range teachingLoads {
+		if load.Semester != int(actSem) {
+			continue // Пропускаем нагрузки, не соответствующие заданному семестру
+		}
+
+		// Обрабатываем аудиторную нагрузку
+		for _, classroomLoad := range load.ClassroomLoads {
+			pedagogicalWorks = append(pedagogicalWorks, models.PedagogicalWork{
+				Semester:    load.Semester,
+				WorkType:    *classroomLoad.LoadType,
+				Hours:       int(*classroomLoad.Hours),
+				MainTeacher: *classroomLoad.MainTeacher,
+				GroupName:   *classroomLoad.GroupName,
+			})
+		}
+
+		// Обрабатываем индивидуальную работу со студентами
+		for _, individualLoad := range load.IndividualStudentsLoads {
+			pedagogicalWorks = append(pedagogicalWorks, models.PedagogicalWork{
+				Semester:    load.Semester,
+				WorkType:    *individualLoad.LoadType,
+				Hours:       0,
+				MainTeacher: "", // Укажите, если необходимо
+				GroupName:   "", // Укажите, если необходимо
+			})
+		}
+
+		// Обрабатываем дополнительную нагрузку
+		for _, additionalLoad := range load.AdditionalLoads {
+			pedagogicalWorks = append(pedagogicalWorks, models.PedagogicalWork{
+				Semester:    load.Semester,
+				WorkType:    *additionalLoad.Name,
+				Hours:       0,  // Предполагается, что Volume это часы
+				MainTeacher: "", // Укажите, если необходимо
+				GroupName:   "", // Укажите, если необходимо
+			})
+		}
+	}
+
+	return pedagogicalWorks, nil
+}
+
+// func (s *Service) GetPresentationData(ctx context.Context, studentID uuid.UUID) ([]model.Dissertations, error) {
+// 	var dissertations []model.Dissertations
+
+// 	err := s.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+// 		var err error
+// 		dissertations, err = s.dissertationRepo.GetDissertationsTx(ctx, tx, studentID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		return nil, errors.Wrap(err, "GetDissertationData()")
+// 	}
+
+// 	return dissertations, nil
+// }
+
 func (s *Service) UpdateStudentsProfile(ctx context.Context, userID, studentID uuid.UUID, studentInfo models.UpdateProfile) error {
 	//groupID, err := strconv.ParseInt(studentInfo.GroupID, 10, 32)
 	//if err != nil {

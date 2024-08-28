@@ -119,3 +119,62 @@ type UpdateProfile struct {
 	StartDate time.Time `db:"students.start_date" json:"date"`
 	Years     int32     `db:"students.years" json:"years,omitempty"`
 }
+
+// Определим новую структуру для передачи данных в Python скрипт
+type ReportData struct {
+	CurrentSemester        int32                    `json:"current_semester"`
+	FullName               string                   `json:"full_name"`
+	SupervisorName         string                   `json:"supervisor_name"`
+	EducationDirection     string                   `json:"education_direction"`
+	EducationProfile       string                   `json:"education_profile"`
+	EnrollmentDate         time.Time                `json:"enrollment_date"`
+	Specialty              string                   `json:"specialty"`
+	TrainingYearFGOS       string                   `json:"training_year_fgos"`
+	CandidateExams         []Exam                   `json:"candidate_exams"`
+	Category               string                   `json:"category"`
+	Topic                  string                   `json:"topic"`
+	ReportPeriodWork       string                   `json:"report_period_work"`
+	ScientificObject       string                   `json:"scientific_obj"`
+	ScientificSubject      string                   `json:"scientific_subj"`
+	MentorRate             string                   `json:"mentor_rate"`
+	ProgressPercents       []int                    `json:"progress_percents"`
+	ProgressDescriptions   []string                 `json:"progress_descriptions"`
+	Publications           []Publication            `json:"publications"`
+	AllPublications        []Publication            `json:"all_publications"`
+	PedagogicalData        []PedagogicalWork        `json:"pedagogical_data"`
+	ReportOtherAchievments string                   `json:"report_other_achievments"`
+	PedagogicalDataAll     []PedagogicalWorkSummary `json:"pedagogical_data_all"`
+	NextSemesterPlan       []string                 `json:"next_semester_plan"`
+}
+
+// // Структура для экзаменов
+// type Exam struct {
+// 	ExamName string `json:"exam_name"`
+// 	Mark     int    `json:"mark"`
+// }
+
+// Структура для публикаций
+// type Publication struct {
+// 	Name       string  `json:"name"`
+// 	Status     string  `json:"status"`
+// 	Impact     float64 `json:"impact"`
+// 	OutputData string  `json:"output_data"`
+// 	CoAuthors  string  `json:"co_authors"`
+// 	Volume     int     `json:"volume"`
+// }
+
+// Структура для педагогической работы
+type PedagogicalWork struct {
+	Semester    int    `json:"semester"`
+	WorkType    string `json:"work_type"`
+	Hours       int    `json:"hours"`
+	MainTeacher string `json:"main_teacher"`
+	GroupName   string `json:"group_name"`
+}
+
+// Структура для обобщенной педагогической нагрузки
+type PedagogicalWorkSummary struct {
+	Semester              string `json:"semester"`
+	ClassroomHours        int    `json:"classroom_hours"`
+	OtherTeachingPractice int    `json:"other_teaching_practice"`
+}

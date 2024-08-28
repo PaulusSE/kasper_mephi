@@ -23,6 +23,8 @@ type (
 		GetStudentsProfile(ctx context.Context, studentID uuid.UUID) (models.StudentProfile, error)
 
 		UpdateStudentsProfile(ctx context.Context, userID, studentID uuid.UUID, studentInfo models.UpdateProfile) error
+
+		GetLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
 	}
 
 	DissertationService interface {
@@ -40,6 +42,11 @@ type (
 		// GetDissertationData - возвращает информацию о диссертации (файле)
 		GetDissertationData(ctx context.Context, studentID uuid.UUID, semester int32) (model.Dissertations, error)
 	}
+
+	// PresentationService interface {
+	// 	// GetPresentationData - возвращает информацию о презентации (файле)
+	// 	GetPresentationData(ctx context.Context, studentID uuid.UUID, semester int32) (model.Presentation, error)
+	// }
 
 	ScientificWorksService interface {
 		// ScientificWorksToStatus - ставит статус для научных работ

@@ -18,6 +18,7 @@ type (
 		UpsertSemesterProgress(ctx *gin.Context)
 		DownloadDissertation(ctx *gin.Context)
 		UploadDissertation(ctx *gin.Context)
+		// DownloadPresentation(ctx *gin.Context)
 		DissertationTitleToReview(ctx *gin.Context)
 		UpsertDissertationTitle(ctx *gin.Context)
 		DissertationToReview(ctx *gin.Context)
@@ -209,6 +210,8 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 
 	r.POST("/students/profile/:token", h.student.UpdateProfile)
 	r.PUT("/students/marks/:token", h.student.DeleteMarks)
+
+	// r.PUT("/students/dissertation/file/:token", h.student.DownloadPresentation)
 
 	// SupervisorHandler init
 	r.GET("/supervisors/student/list/:token", h.supervisor.GetStudentsList)
