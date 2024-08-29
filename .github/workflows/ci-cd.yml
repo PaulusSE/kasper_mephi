@@ -61,9 +61,11 @@ jobs:
         password: ${{ env.PASSWORD }}
         port: ${{ env.PORT }}
         script: |
-          pwd
-          ls -la
-          docker pull ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
-          docker-compose -f ${{ matrix.compose_file }} down
+          docker network ls
+          docker ps -a
+          if [ $(docker network ls | grep kasper-test-prod | wc -l) -gt 0 ]; then
+            docker-compose -f ${{ matrix.compose_file }} down
+          fi
           docker-compose -f ${{ matrix.compose_file }} up -d
+
 
