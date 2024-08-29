@@ -1,0 +1,54 @@
+name: Go Application CI/CD
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - environment: dev
+            compose_file: docker-compose-dev.yml
+            branch: dev
+          - environment: prod
+            compose_file: docker-compose-prod.yml
+            branch: master
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: user/app:${{ matrix.environment }}-${{ github.sha }}
+        file: Dockerfile
+        build-args: |
+          ENV=${{ matrix.environment }}
+
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets['SERVER_HOST_' + matrix.environment] }}
+        username: ${{ secrets['SERVER_USER_' + matrix.environment] }}
+        password: ${{ secrets['SERVER_PASSWORD_' + matrix.environment] }}
+        port: ${{ secrets['SERVER_PORT_' + matrix.environment] }}
+        script: |
+          docker pull user/app:${{ matrix.environment }}-${{ github.sha }}
+          docker-compose -f ${{ matrix.compose_file }} down
+          docker-compose -f ${{ matrix.compose_file }} up -d
