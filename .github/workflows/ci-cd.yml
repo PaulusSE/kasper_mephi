@@ -43,12 +43,17 @@ jobs:
 
     - name: Set environment secrets
       run: |
-        echo "HOST=${{ secrets['SERVER_HOST_' + matrix.environment] }}" >> $GITHUB_ENV
-        echo "USERNAME=${{ secrets['SERVER_USER_' + matrix.environment] }}" >> $GITHUB_ENV
-        echo "PASSWORD=${{ secrets['SERVER_PASSWORD_' + matrix.environment] }}" >> $GITHUB_ENV
-        echo "PORT=${{ secrets['SERVER_PORT_' + matrix.environment] }}" >> $GITHUB_ENV
+        echo "HOST=${{ secrets['SERVER_HOST_prod'] }}" >> $GITHUB_ENV
+        echo "USERNAME=${{ secrets['SERVER_USER_prod'] }}" >> $GITHUB_ENV
+        echo "PASSWORD=${{ secrets['SERVER_PASSWORD_prod'] }}" >> $GITHUB_ENV
+        echo "PORT=${{ secrets['SERVER_PORT_prod'] }}" >> $GITHUB_ENV
 
     - name: Deploy to Server
+      env:
+        HOST: ${{ secrets['SERVER_HOST_prod'] }}
+        USERNAME: ${{ secrets['SERVER_USER_prod'] }}
+        PASSWORD: ${{ secrets['SERVER_PASSWORD_prod'] }}
+        PORT: ${{ secrets['SERVER_PORT_prod'] }}
       uses: appleboy/ssh-action@master
       with:
         host: ${{ env.HOST }}
