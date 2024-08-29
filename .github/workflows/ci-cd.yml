@@ -63,6 +63,8 @@ jobs:
         script: |
           pwd
           ls -la
+          - name: Copy docker-compose file
+            run: cp ${{ matrix.compose_file }} ./path/where/needed/
           docker pull ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
           docker-compose -f ${{ matrix.compose_file }} down
           docker-compose -f ${{ matrix.compose_file }} up -d
