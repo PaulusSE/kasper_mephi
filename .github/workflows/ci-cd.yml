@@ -61,6 +61,10 @@ jobs:
         password: ${{ env.PASSWORD }}
         port: ${{ env.PORT }}
         script: |
+          pwd
+          ls -la
+          docker-compose -f ./docker-compose-prod.yaml down
+          docker-compose -f ./docker-compose-prod.yaml up -d
           docker pull ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
           docker-compose -f ${{ matrix.compose_file }} down
           docker-compose -f ${{ matrix.compose_file }} up -d
