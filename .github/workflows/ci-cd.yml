@@ -63,7 +63,10 @@ jobs:
         script: |
           pwd
           ls -la
-          cp ${{ matrix.compose_file }} ./
+          if [ ! -f ${{ github.workspace }}/${{ matrix.compose_file }} ]; then
+            echo "${{ matrix.compose_file }} does not exist."
+            exit 1
+          fi
           docker pull ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
-          docker-compose -f ${{ matrix.compose_file }} down
-          docker-compose -f ${{ matrix.compose_file }} up -d
+          docker-compose -f ${{ github.workspace }}/${{ matrix.compose_file }} down
+          docker-compose -f ${{ github.workspace }}/${{ matrix.compose_file }} up -d
