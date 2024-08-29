@@ -1,0 +1,26 @@
+version: "3.7"
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    volumes:
+      - ./dissertations:/usr/src/app/dissertations
+    environment:
+      MAIL_PASSWORD: "vVtVASLsViAdwF6"
+    container_name: "kasper-back-prod"
+    extra_hosts:
+      - "database:your-prod-db-ip"
+
+  front:
+    image: "jackblack178/kasper-front:prod"
+    ports:
+      - "80:5173"
+    restart: always
+    depends_on:
+      - server
+    container_name: "kasper-front-prod"
