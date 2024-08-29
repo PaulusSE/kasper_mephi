@@ -67,5 +67,3 @@ jobs:
             docker-compose -f ${{ matrix.compose_file }} down
           fi
           docker-compose -f ${{ matrix.compose_file }} up -d
-
-
