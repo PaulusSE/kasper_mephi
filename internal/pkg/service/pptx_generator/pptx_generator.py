@@ -1,40 +1,101 @@
 import sys
 import json
+import logging
 from pptx import Presentation
 from pptx.util import Pt, Inches
 from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 
-# Чтение данных JSON из stdin
-input_data = json.load(sys.stdin)
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Извлечение данных из JSON
-current_semester = input_data['current_semester']
-full_name = input_data['full_name']
-supervisor_name = input_data['supervisor_name']
-education_direction = input_data['education_direction']
-education_profile = input_data['education_profile']
-enrollment_date = input_data['enrollment_date']
-specialty = input_data['specialty']
-training_year_fgos = input_data['training_year_fgos']
-candidate_exams = input_data['candidate_exams']
-category = input_data['category']
-topic = input_data['topic']
-report_period_work = input_data['report_period_work']
-scientific_obj = input_data['scientific_obj']
-scientific_subj = input_data['scientific_subj']
-mentor_rate = input_data['mentor_rate']
-progress_percents = input_data['progress_percents']
-progress_descriptions = input_data['progress_descriptions']
-publications = input_data['publications']
-all_publications = input_data['all_publications']
-pedagogical_data = input_data['pedagogical_data']
-report_other_achievments = input_data['report_other_achievments']
-pedagogical_data_all = input_data['pedagogical_data_all']
-next_semester_plan = input_data['next_semester_plan']
+try:
+    # Чтение данных JSON из stdin
+    input_data = json.load(sys.stdin)
+    logging.info("JSON data successfully loaded.")
+except json.JSONDecodeError:
+    logging.error("Failed to decode JSON.")
+    sys.exit(1)
+except Exception as e:
+    logging.error(f"An error occurred: {e}")
+    sys.exit(1)
+    
+def validate_and_extract_data(input_data):
+    # Define a dictionary of default values
+    defaults = {
+        'current_semester': 1,
+        'full_name': 'Unknown',
+        'supervisor_name': 'Unknown',
+        'education_direction': 'Unknown',
+        'education_profile': 'Unknown',
+        'enrollment_date': 'Unknown',
+        'specialty': 'Unknown',
+        'training_year_fgos': 'Unknown',
+        'candidate_exams': [],
+        'category': 'Unknown',
+        'topic': 'No topic provided',
+        'report_period_work': 'No report provided',
+        'scientific_obj': 'No object defined',
+        'scientific_subj': 'No subject defined',
+        'mentor_rate': 'No rate provided',
+        'progress_percents': [],
+        'progress_descriptions': [],
+        'publications': [],
+        'all_publications': [],
+        'pedagogical_data': [],
+        'report_other_achievments': '',
+        'pedagogical_data_all': [],
+        'next_semester_plan': ['No plans available'],
+    }
 
+    # Extract data with default values if key is missing
+    validated_data = {}
+    for key, default in defaults.items():
+        if key in input_data:
+            validated_data[key] = input_data[key]
+        else:
+            validated_data[key] = default
+            logging.warning(f"Missing key in input data: {key}. Using default value: {default}")
 
+    return validated_data
+
+data = validate_and_extract_data(input_data)
+
+# Extract data
+try:
+    current_semester = data['current_semester']
+    full_name = data['full_name']
+    supervisor_name = data['supervisor_name']
+    education_direction = data['education_direction']
+    education_profile = data['education_profile']
+    enrollment_date = data['enrollment_date']
+    specialty = data['specialty']
+    training_year_fgos = data['training_year_fgos']
+    candidate_exams = data['candidate_exams']
+    category = data['category']
+    topic = data['topic']
+    report_period_work = data['report_period_work']
+    scientific_obj = data['scientific_obj']
+    scientific_subj = data['scientific_subj']
+    mentor_rate = data['mentor_rate']
+    progress_percents = data['progress_percents']
+    progress_descriptions = data['progress_descriptions']
+    publications = data['publications']
+    all_publications = data['all_publications']
+    pedagogical_data = data['pedagogical_data']
+    report_other_achievments = data['report_other_achievments']
+    pedagogical_data_all = data['pedagogical_data_all']
+    next_semester_plan = data['next_semester_plan']
+    logging.info("Data extraction successful.")
+except KeyError as e:
+    logging.error(f"Missing key in data: {e}")
+    sys.exit(1)
+
+if len(progress_percents) < current_semester:
+    percent = "-"
+else:
+    percent = progress_percents[current_semester-1]
 class SlideGenerator:
     def __init__(self):
         self.prs = Presentation()
@@ -45,84 +106,90 @@ class SlideGenerator:
         return slide
 
     def add_text_to_slide(self, slide, text, left, top, width, height, font_size=12, bold=False, alignment=PP_ALIGN.LEFT, color=(0, 0, 0)):
-        txBox = slide.shapes.add_textbox(left, top, width, height)
-        tf = txBox.text_frame
-        if not tf.text:
-            tf.clear()
-        tf.word_wrap = True
-        p = tf.paragraphs[0] if tf.paragraphs else tf.add_paragraph()
-        p.text = text
-        p.font.size = Pt(font_size)
-        p.font.bold = bold
-        p.alignment = alignment
-        p.font.color.rgb = RGBColor(color[0], color[1], color[2])
+        try:
+            txBox = slide.shapes.add_textbox(left, top, width, height)
+            tf = txBox.text_frame
+            if not tf.text:
+                tf.clear()
+            tf.word_wrap = True
+            p = tf.paragraphs[0] if tf.paragraphs else tf.add_paragraph()
+            p.text = text
+            p.font.size = Pt(font_size)
+            p.font.bold = bold
+            p.alignment = alignment
+            p.font.color.rgb = RGBColor(color[0], color[1], color[2])
+        except Exception as e:
+            logging.error(f"Error adding text to slide: {e}")
 
     def add_image_to_slide(self, slide, image_path, left, top, width, height):
-        slide.shapes.add_picture(image_path, left, top, width, height)
+        try:
+            slide.shapes.add_picture(image_path, left, top, width, height)
+        except Exception as e:
+            logging.error(f"Error adding image to slide: {e}")
 
     def add_table_to_slide(self, slide, data, left, top, width, height, font_size=8):
-        rows = len(data)
-        cols = max(len(row) for row in data)  # Находим максимальное количество столбцов в строках
-        table = slide.shapes.add_table(rows, cols, left, top, width, height).table
-
-        for i, row in enumerate(data):
-            for j, (text, rowspan, colspan) in enumerate(row):
-                if text is not None:
-                    if isinstance(text, list):  # Проверяем, является ли текст списком
-                        text = ", ".join(text)  # Преобразуем список в строку, разделенную запятыми
+        try:
+            rows = len(data)
+            cols = max(len(row) for row in data)  # Find the maximum number of columns across all rows
+            table = slide.shapes.add_table(rows, cols, left, top, width, height).table
+            for i, row in enumerate(data):
+                for j, cell_data in enumerate(row):
+                    text, rowspan, colspan = cell_data
                     cell = table.cell(i, j)
-                    cell.text = text
                     if rowspan > 1 or colspan > 1:
-                        cell.merge(table.cell(i + rowspan - 1, j + colspan - 1))
-
-        # Устанавливаем размер шрифта для всей таблицы
-        for row in table.rows:
-            for cell in row.cells:
-                for paragraph in cell.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        run.font.size = Pt(font_size)
-                        paragraph.alignment = PP_ALIGN.LEFT  # Выравнивание текста по левому краю
-        return table
+                        merged_cell = table.cell(i + rowspan - 1, j + colspan - 1)
+                        cell.merge(merged_cell)
+                    cell.text = text
+                    for paragraph in cell.text_frame.paragraphs:
+                        paragraph.font.size = Pt(font_size)
+                        paragraph.alignment = PP_ALIGN.LEFT
+        except Exception as e:
+            logging.error(f"Error adding table to slide: {e}")
 
     def add_decorative_elements(self, slide):
-        shapes = slide.shapes
-        line_top = shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(10), Inches(0.3)
-        )
-        line_top.fill.solid()
-        line_top.fill.fore_color.rgb = RGBColor(0, 112, 192)
+        try:
+            shapes = slide.shapes
+            line_top = shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(10), Inches(0.3))
+            line_top.fill.solid()
+            line_top.fill.fore_color.rgb = RGBColor(0, 112, 192)
 
-        line_bottom = shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, Inches(0), Inches(7.2), Inches(10), Inches(0.3)
-        )
-        line_bottom.fill.solid()
-        line_bottom.fill.fore_color.rgb = RGBColor(0, 112, 192)
+            line_bottom = shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(7.2), Inches(10), Inches(0.3))
+            line_bottom.fill.solid()
+            line_bottom.fill.fore_color.rgb = RGBColor(0, 112, 192)
+        except Exception as e:
+            logging.error(f"Error adding decorative elements to slide: {e}")
 
     def add_background(self, slide, color=(245, 245, 245)):
-        background = slide.background
-        fill = background.fill
-        fill.solid()
-        fill.fore_color.rgb = RGBColor(color[0], color[1], color[2])
+        try:
+            background = slide.background
+            fill = background.fill
+            fill.solid()
+            fill.fore_color.rgb = RGBColor(color[0], color[1], color[2])
+        except Exception as e:
+            logging.error(f"Error setting slide background: {e}")
 
     def create_presentation(self, slides_data):
-        for i, slide_data in enumerate(slides_data):
-            slide = self.add_slide()
-            self.add_background(slide)
-            self.add_decorative_elements(slide)
-            for element in slide_data:
-                if element['type'] == 'text':
-                    self.add_text_to_slide(slide, element['content'], element['left'], element['top'], element['width'], element['height'],
-                                          element.get('font_size', 12), element.get('bold', False), element.get('alignment', PP_ALIGN.LEFT),
-                                          element.get('color', (0, 0, 0)))
-                elif element['type'] == 'image':
-                    self.add_image_to_slide(slide, element['image_path'], element['left'], element['top'], element['width'], element['height'])
-                elif element['type'] == 'table':
-                    table = self.add_table_to_slide(slide, element['data'], element['left'], element['top'], element['width'], element['height'], element.get('font_size', 8))
-                    if 'column_widths' in element:
-                        set_column_widths(table, element['column_widths'])
+        try:
+            for slide_data in slides_data:
+                slide = self.add_slide()
+                self.add_background(slide)
+                self.add_decorative_elements(slide)
+                for element in slide_data:
+                    if element['type'] == 'text':
+                        self.add_text_to_slide(slide, element['content'], element['left'], element['top'], element['width'], element['height'], element.get('font_size', 12), element.get('bold', False), element.get('alignment', PP_ALIGN.LEFT), element.get('color', (0, 0, 0)))
+                    elif element['type'] == 'image':
+                        self.add_image_to_slide(slide, element['image_path'], element['left'], element['top'], element['width'], element['height'])
+                    elif element['type'] == 'table':
+                        self.add_table_to_slide(slide, element['data'], element['left'], element['top'], element['width'], element['height'], element.get('font_size', 8))
+        except Exception as e:
+            logging.error(f"Error while creating presentation: {e}")
 
     def save_presentation(self, filename):
-        self.prs.save(filename)
+        try:
+            self.prs.save(filename)
+            logging.info("Presentation saved successfully.")
+        except Exception as e:
+            logging.error(f"Error saving presentation: {e}")
 
 # def build_table_disser_work_data(topic, progress_percents, progress_descriptions):
 #     table_data = [
@@ -144,11 +211,17 @@ class SlideGenerator:
 #     return table_data
 
 def build_table_disser_work_data(topic, progress_percents, progress_descriptions):
+    # Check if inputs are not provided, assign default values
+    topic = topic if topic is not None else "No topic provided"
+    if not progress_percents:
+        progress_percents = [""] * 8  # Assume 8 semesters as default
+    if not progress_descriptions:
+        progress_descriptions = [""] * 8  # Same assumption
+
     table_data = [
-        [("Тема:", 2, 1), (topic, 2, 3)],  # Объединение строк для "Тема:"
-        [("", 1, 1), ("", 1, 1), ("", 1, 1), ("", 1, 1)],  # Пустые строки для объединённых ячеек
+        [("Тема:", 2, 1), (topic, 2, 3)],
+        [("", 1, 1), ("", 1, 1), ("", 1, 1), ("", 1, 1)],
         [("Прогресс (по рукописи и разработке ПО)", 9, 1), ("По семестрам", 1, 3)],
-        # [("", 1, 1),("По семестрам", 1, 3)],
     ]
 
     semesters = [
@@ -156,10 +229,10 @@ def build_table_disser_work_data(topic, progress_percents, progress_descriptions
         "5-ый семестр", "6-ой семестр", "7-ой семестр", "8-ой семестр"
     ]
 
-    for i in range(len(semesters)):
+    for i, semester in enumerate(semesters):
         percent = progress_percents[i] if i < len(progress_percents) else ""
         description = progress_descriptions[i] if i < len(progress_descriptions) else ""
-        table_data.append([("", 1, 0), (semesters[i], 1, 0), (percent, 1, 0), (description, 1, 0)])  # Добавляем данные без объединения ячеек
+        table_data.append([("", 1, 0), (semester, 1, 0), (percent, 1, 0), (description, 1, 0)])
 
     return table_data
 
@@ -309,8 +382,16 @@ def build_table_pedagogical_work_all(data):
 
     return table_data
 
+# Функция для вывода файла в stdout
+def output_file_to_stdout(filepath):
+    try:
+        with open(filepath, 'rb') as f:
+            sys.stdout.buffer.write(f.read())
+    except Exception as e:
+        logging.error(f"Error reading file {filepath}: {e}")
+        
 # Пример использования
-slide_generator = SlideGenerator()
+# slide_generator = SlideGenerator()
 
 # Определение данных для слайдов
 slides_data = [
@@ -348,7 +429,7 @@ slides_data = [
     ],
     [
         {'type': 'text', 'content': "Отчет о работе над диссертацией за отчетный период", 'left': Pt(50), 'top': Pt(50), 'width': Pt(620), 'height': Pt(40), 'font_size': 24, 'bold': True, 'alignment': PP_ALIGN.LEFT, 'color': (0, 112, 192)},
-        {'type': 'text', 'content': f"{report_period_work}\nПроцент выполнения: {progress_percents[current_semester-1]}%\nТема: {topic}\nОбъект исследования: {scientific_obj}\nПредмет исследования: {scientific_subj}\nОценка научного руководителя: {mentor_rate}", 'left': Pt(50), 'top': Pt(100), 'width': Pt(620), 'height': Pt(100), 'font_size': 14, 'bold': False, 'alignment': PP_ALIGN.LEFT},
+        {'type': 'text', 'content': f"{report_period_work}\nПроцент выполнения: {percent}%\nТема: {topic}\nОбъект исследования: {scientific_obj}\nПредмет исследования: {scientific_subj}\nОценка научного руководителя: {mentor_rate}", 'left': Pt(50), 'top': Pt(100), 'width': Pt(620), 'height': Pt(100), 'font_size': 14, 'bold': False, 'alignment': PP_ALIGN.LEFT},
         {'type': 'text', 'content': "3", 'left': Pt(50), 'top': Pt(520), 'width': Pt(620), 'height': Pt(20), 'font_size': 12, 'bold': False, 'alignment': PP_ALIGN.CENTER, 'color': (255, 255, 255)},
         {'type': 'image', 'image_path': 'MEPhI_Logo2014_en.png', 'left': Inches(0), 'top': Inches(6.7), 'width': Inches(0.8), 'height': Inches(0.8)},
         {'type': 'image', 'image_path': 'kaf22.png', 'left': Inches(8.5), 'top': Inches(6.9), 'width': Inches(1.5), 'height': Inches(0.6)}
@@ -407,8 +488,16 @@ slides_data = [
     ]
 ]
 
-# Создание презентации
-slide_generator.create_presentation(slides_data)
+# Create and save presentation
+# Основной блок для создания и сохранения презентации
+try:
+    slide_generator = SlideGenerator()
+    slide_generator.create_presentation(slides_data)
+    slide_generator.save_presentation('report.pptx')
+    logging.info("Presentation created and saved successfully.")
+    
+    # Вывод файла в stdout
+    output_file_to_stdout('report.pptx')
 
-# Сохранение презентации
-slide_generator.save_presentation('report.pptx')
+except Exception as e:
+    logging.error(f"Failed to create or save presentation: {e}")

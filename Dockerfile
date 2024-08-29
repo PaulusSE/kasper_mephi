@@ -18,6 +18,9 @@ RUN go mod download && go mod verify
 COPY . .
 RUN go build -o ./bin/server ./cmd/kasper/main.go
 
+# Копирование всех необходимых файлов и директорий в контейнер
+COPY . /usr/src/app
+
 EXPOSE 8080
 
 CMD ["./bin/server"]

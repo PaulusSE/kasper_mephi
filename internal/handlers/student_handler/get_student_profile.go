@@ -2,9 +2,16 @@ package student_handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
+	"os"
 	"os/exec"
+	"time"
 
 	"uir_draft/internal/pkg/models"
 
@@ -14,101 +21,127 @@ import (
 // GetStudentProfile
 //
 //	@Summary		Получение профиля студента
-//
 //	@Description	Получение профиля студента
-//
 //	@Tags			Student
-//	@Accept			json
+//	@Accept		json
 //	@Produce		json
-//	@Success		200		{object}	models.StudentProfile	"Данные"
-//	@Param			token	path		string					true	"Токен пользователя"
-//	@Failure		400		{string}	string					"Неверный формат данных"
-//	@Failure		401		{string}	string					"Токен протух"
-//	@Failure		204		{string}	string					"Нет записей в БД"
-//	@Failure		500		{string}	string					"Ошибка на стороне сервера"
+//	@Success		200		{object}		models.Student
+//	@Param		token	path		string		true	"Токен пользователя"
+//	@Failure		400		{string}	string	"Неверный формат данных"
+//	@Failure		401		{string}	string	"Токен протух"
+//	@Failure		204		{string}	string	"Нет записей в БД"
+//	@Failure		500		{string}	string	"Ошибка на стороне сервера"
 //	@Router			/student/profile/{token} [get]
+
 func (h *StudentHandler) GetStudentProfile(ctx *gin.Context) {
+	log.Println("Начало обработки запроса для получения профиля студента")
+
 	user, err := h.authenticate(ctx)
 	if err != nil {
+		log.Printf("Ошибка аутентификации: %v\n", err)
 		ctx.AbortWithError(models.MapErrorToCode(err), err)
 		return
 	}
 
 	student, err := h.student.GetStudentsProfile(ctx, user.KasperID)
 	if err != nil {
+		log.Printf("Ошибка получения профиля студента: %v\n", err)
 		ctx.AbortWithError(models.MapErrorToCode(err), err)
 		return
 	}
 
-	// Получаем дополнительные данные
-
-	// publications, err := h.student.GetPublications(ctx, student.StudentID)
+	// err = h.handleWithPptx(ctx, student)
 	// if err != nil {
-	// 	ctx.AbortWithError(http.StatusInternalServerError, err)
-	// 	return
+	// 	log.Printf("Ошибка при обработке PPTX: %v\n", err)
+	// 	// Ошибка обрабатывается, но клиенту всё равно отправляется профиль
 	// }
 
-	// exams, err := h.student.GetExams(ctx, student.StudentID)
-	// if err != nil {
-	// 	ctx.AbortWithError(http.StatusInternalServerError, err)
-	// 	return
-	// }
+	ctx.JSON(http.StatusOK, student)
+}
 
+func (h *StudentHandler) handleWithPptx(ctx *gin.Context, student models.StudentProfile) error {
 	load, err := h.student.GetLoad(ctx, student.StudentID, student.ActualSemester)
 	if err != nil {
+		log.Printf("Ошибка получения учебной нагрузки: %v\n", err)
 		ctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		load = []models.PedagogicalWork{}
 	}
 
-	// Создаем структуру для передачи в Python скрипт
+	log.Println("Учебная нагрузка получена")
+
+	// reportData := prepareReportData(student)
 	reportData := models.ReportData{
 		CurrentSemester:      student.ActualSemester,
 		FullName:             student.FullName,
-		SupervisorName:       "Supervisor Name",     // Здесь нужно заменить на реальные данные
-		EducationDirection:   "Education Direction", // Здесь нужно заменить на реальные данные
+		SupervisorName:       "Supervisor Name",
+		EducationDirection:   "Education Direction",
 		EducationProfile:     student.Specialization,
 		EnrollmentDate:       student.StartDate,
 		Specialty:            student.Specialization,
-		TrainingYearFGOS:     "Training Year FGOS", // Здесь нужно заменить на реальные данные
+		TrainingYearFGOS:     "Training Year FGOS",
 		CandidateExams:       []models.Exam{},
 		Category:             student.Category,
-		Topic:                "Dissertation Topic", // Здесь нужно заменить на реальные данные
-		ReportPeriodWork:     "Report Period Work", // Здесь нужно заменить на реальные данные
-		ScientificObject:     "Scientific Object",  // Здесь нужно заменить на реальные данные
-		ScientificSubject:    "Scientific Subject", // Здесь нужно заменить на реальные данные
-		MentorRate:           "Mentor Rate",        // Здесь нужно заменить на реальные данные
-		ProgressPercents:     []int{},              // Заполнить данными
-		ProgressDescriptions: []string{},           // Заполнить данными
+		Topic:                "Dissertation Topic",
+		ReportPeriodWork:     "Report Period Work",
+		ScientificObject:     "Scientific Object",
+		ScientificSubject:    "Scientific Subject",
+		MentorRate:           "Mentor Rate",
+		ProgressPercents:     []int{},
+		ProgressDescriptions: []string{},
 		Publications:         []models.Publication{},
-		AllPublications:      []models.Publication{}, // Заполнить данными
-		PedagogicalData:      load,                   // Заполнить данными
-		// ReportOtherAchievements: "Other Achievements", // Здесь нужно заменить на реальные данные
-		// PedagogicalDataAll:    []PedagogicalWorkSummary{}, // Заполнить данными
-		NextSemesterPlan: []string{"Plan 1", "Plan 2"}, // Заполнить данными
+		AllPublications:      []models.Publication{},
+		PedagogicalData:      load,
+		NextSemesterPlan:     []string{"Plan 1", "Plan 2"},
 	}
 
-	// Преобразуем объект в JSON
 	reportDataJSON, err := json.Marshal(reportData)
 	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
-		return
+		return err
 	}
 
-	// Вызов Python скрипта для генерации презентации
-	cmd := exec.Command("python3", "generate_presentation.py")
+	if err := generatePptx(reportDataJSON); err != nil {
+		return err
+	}
+
+	// Подготовка multipart ответа
+	w := multipart.NewWriter(ctx.Writer)
+	defer w.Close()
+	ctx.Header("Content-Type", w.FormDataContentType())
+
+	// Добавление JSON части
+	jsonPart, err := w.CreatePart(textproto.MIMEHeader{"Content-Type": {"application/json"}})
+	if err != nil {
+		return err
+	}
+	jsonPart.Write(reportDataJSON)
+
+	// Добавление файла с указанием Content-Disposition
+	filePartHeader := textproto.MIMEHeader{
+		"Content-Disposition": {`form-data; name="file"; filename="report.pptx"`},
+		"Content-Type":        {"application/vnd.openxmlformats-officedocument.presentationml.presentation"},
+	}
+	filePart, err := w.CreatePart(filePartHeader)
+	if err != nil {
+		return err
+	}
+	filepath := "/usr/src/app/internal/pkg/service/pptx_generator/report.pptx"
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	io.Copy(filePart, file)
+
+	return nil
+}
+
+func generatePptx(reportDataJSON []byte) error {
+	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctxWithTimeout, "python3", "pptx_generator.py")
 	cmd.Stdin = bytes.NewReader(reportDataJSON)
+	cmd.Dir = "/usr/src/app/internal/pkg/service/pptx_generator"
 
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	// Отправляем файл пользователю
-	ctx.Header("Content-Disposition", "attachment; filename=report.pptx")
-	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.presentationml.presentation", out.Bytes())
-
-	ctx.JSON(http.StatusOK, student)
+	return cmd.Run()
 }

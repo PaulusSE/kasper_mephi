@@ -156,7 +156,7 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r := router.Group("/api")
+	r := router.Group("/")
 	// Swagger documentation
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
