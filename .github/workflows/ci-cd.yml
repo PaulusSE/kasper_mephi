@@ -13,10 +13,10 @@ jobs:
       matrix:
         include:
           - environment: dev
-            compose_file: docker-compose-dev.yml
+            compose_file: docker-compose-dev.yaml
             branch: dev
           - environment: prod
-            compose_file: docker-compose-prod.yml
+            compose_file: docker-compose-prod.yaml
             branch: master
 
     steps:
