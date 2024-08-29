@@ -13,10 +13,10 @@ jobs:
       matrix:
         include:
           - environment: dev
-            compose_file: ./docker-compose-dev.yaml
+            compose_file: ./kasper_mephi/docker-compose-dev.yaml
             branch: dev
           - environment: prod
-            compose_file: ./docker-compose-prod.yaml
+            compose_file: ./kasper_mephi/docker-compose-prod.yaml
             branch: master
 
     steps:
@@ -37,7 +37,7 @@ jobs:
       with:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
-        file: Dockerfile
+        file: ./kasper_mephi/Dockerfile
         build-args: |
           ENV=${{ matrix.environment }}
 
