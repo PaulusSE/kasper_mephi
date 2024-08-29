@@ -36,7 +36,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: user/app:${{ matrix.environment }}-${{ github.sha }}
+        tags: ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
         file: Dockerfile
         build-args: |
           ENV=${{ matrix.environment }}
