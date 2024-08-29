@@ -54,11 +54,15 @@ jobs:
         USERNAME: ${{ secrets['SERVER_USER_prod'] }}
         PASSWORD: ${{ secrets['SERVER_PASSWORD_prod'] }}
         PORT: ${{ secrets['SERVER_PORT_prod'] }}
-      uses: appleboy/scp-action@master
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ env.HOST }}
         username: ${{ env.USERNAME }}
         password: ${{ env.PASSWORD }}
         port: ${{ env.PORT }}
-        source: "${{ github.workspace }}/${{ matrix.compose_file }}"
-        target: "./"
+        script: |
+          pwd
+          ls -la
+          docker pull ${{ secrets.DOCKER_USERNAME }}/app:${{ matrix.environment }}-${{ github.sha }}
+          docker-compose -f ${{ matrix.compose_file }} down
+          docker-compose -f ${{ matrix.compose_file }} up -d
