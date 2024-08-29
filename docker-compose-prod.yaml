@@ -1,26 +1,41 @@
 version: "3.7"
 
 services:
+  postgres:
+    image: postgres:latest
+    container_name: "postgres_prod"
+    environment:
+      POSTGRES_USER: "prod"
+      POSTGRES_PASSWORD: "prod_password"
+      POSTGRES_DB: "uir_draft_prod"
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+      - ./new_kasper_prod.sql:/docker-entrypoint-initdb.d/init.sql
+
   server:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
     restart: always
     volumes:
-      - ./dissertations:/usr/src/app/dissertations
+      - ./dissertations_prod:/usr/src/app/dissertations
     environment:
-      MAIL_PASSWORD: "vVtVASLsViAdwF6"
+      MAIL_PASSWORD: "prod_mail_password"
+      DATABASE_URL: "postgres://prod:prod_password@postgres:5432/uir_draft_prod"
     container_name: "kasper-back-prod"
-    extra_hosts:
-      - "database:your-prod-db-ip"
+    depends_on:
+      - postgres
 
   front:
     image: "jackblack178/kasper-front:prod"
-    ports:
-      - "80:5173"
     restart: always
     depends_on:
       - server
     container_name: "kasper-front-prod"
+
+networks:
+  default:
+    name: kasper-test-prod
+
+volumes:
+  pgdata_prod: {}
