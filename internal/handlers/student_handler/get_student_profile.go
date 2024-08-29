@@ -36,6 +36,5 @@ func (h *StudentHandler) GetStudentProfile(ctx *gin.Context) {
 		ctx.AbortWithError(models.MapErrorToCode(err), err)
 		return
 	}
-
 	ctx.JSON(http.StatusOK, student)
 }
