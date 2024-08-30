@@ -18,25 +18,19 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
 
-    - name: Copy Docker files to Server
+    - name: Copy entire repository to Server
       run: |
-        scp -P ${{ secrets.SERVER_PORT_prod }} docker-compose-prod.yaml Dockerfile ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
-        scp -P ${{ secrets.SERVER_PORT_prod }} go.mod go.sum ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
+        rsync -avz -e "ssh -p ${{ secrets.SERVER_PORT_prod }} -o StrictHostKeyChecking=no" --exclude '.git' ./ ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
 
-    - name: List files
+    - name: List files on Server
       run: |
-        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} 'ls -l /root/kasper-server'
+        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} 'ls -R /root/kasper-server'
 
     - name: Deploy to Server using Docker
       run: |
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} <<EOF
         cd /root/kasper-server
-        if [ -f docker-compose-prod.yaml ] && [ -f Dockerfile ] && [ -f go.mod ] && [ -f go.sum ]; then
-          echo "All files are in place. Starting deployment..."
-          echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml down
-          echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml up --build -d
-        else
-          echo "Error: One or more files are missing. Deployment aborted."
-          exit 1
-        fi
+        echo "Attempting to pull latest images and rebuild containers..."
+        echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml down
+        echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml up --build -d
         EOF
