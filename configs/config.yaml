@@ -1,9 +1,9 @@
 port: "5432"
-host: "localhost"
+host: "postgres_container"
 db:
   username: "postgres"
   password: "1234"
-  host: "localhost"
+  host: "postgres_container"
   port: "5432"
   dbname: "uir_draft"
   sslmode: "disable"
