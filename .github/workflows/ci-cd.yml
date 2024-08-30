@@ -23,6 +23,10 @@ jobs:
         scp -P ${{ secrets.SERVER_PORT_prod }} docker-compose-prod.yaml Dockerfile ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
         scp -P ${{ secrets.SERVER_PORT_prod }} go.mod go.sum ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
 
+    - name: List files
+      run: |
+        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} 'ls -l /root/kasper-server'
+
     - name: Deploy to Server using Docker
       run: |
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} <<EOF
