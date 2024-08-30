@@ -22,7 +22,7 @@ jobs:
 
     - name: Copy Docker files to Server
       run: |
-        scp -P ${{ secrets.SERVER_PORT_prod }} docker-compose-prod.yaml Dockerfile ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/path/to/your/project
+        scp -P ${{ secrets.SERVER_PORT_prod }} docker-compose-prod.yaml Dockerfile ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
 
     - name: Deploy to Server using Docker
       run: |
