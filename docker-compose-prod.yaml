@@ -27,7 +27,7 @@ services:
       - postgres
 
   front:
-    image: "jackblack178/kasper-front:prod"
+    image: "jackblack178/kasper-front:0.1.4"
     restart: always
     depends_on:
       - server
