@@ -12,8 +12,6 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up SSH key and SSH command
-      env:
-        SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_HOST_prod }} >> ~/.ssh/known_hosts
@@ -23,11 +21,18 @@ jobs:
     - name: Copy Docker files to Server
       run: |
         scp -P ${{ secrets.SERVER_PORT_prod }} docker-compose-prod.yaml Dockerfile ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
+        scp -P ${{ secrets.SERVER_PORT_prod }} go.mod go.sum ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
 
     - name: Deploy to Server using Docker
       run: |
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} <<EOF
         cd /root/kasper-server
-        echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml down
-        echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml up --build -d
+        if [ -f docker-compose-prod.yaml ] && [ -f Dockerfile ] && [ -f go.mod ] && [ -f go.sum ]; then
+          echo "All files are in place. Starting deployment..."
+          echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml down
+          echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml up --build -d
+        else
+          echo "Error: One or more files are missing. Deployment aborted."
+          exit 1
+        fi
         EOF
