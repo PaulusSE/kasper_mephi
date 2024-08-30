@@ -8,21 +8,21 @@ services:
     restart: always
     volumes:
       - ./dissertations:/usr/src/app/dissertations
-    # extra_hosts:
-    #   - "postgres:95.163.231.174"
     environment:
       MAIL_PASSWORD: "vVtVASLsViAdwF6"
     container_name: "kasper-back"
- front:
+
+  front:
     image: "jackblack178/kasper-front:localhost"
     ports:
-      - "8082:5173"  # Заменили порт 80 на 8082
+      - "8082:5173"  # Replaced port 80 with 8082
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - server
     container_name: "kasper-front"
+
   postgres:
     image: postgres:latest
     container_name: postgres_container
@@ -36,7 +36,6 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./new_kasper.sql:/var/desctop.sql
 
-
 networks:
   default:
     driver: bridge
@@ -45,5 +44,4 @@ networks:
     name: kasper-test
 
 volumes:
-  pgdata:
-  
+  pgdata: {}
