@@ -34,3 +34,4 @@ jobs:
         echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml down
         echo ${{ secrets.SERVER_PASSWORD_prod }} | sudo -S docker-compose -f docker-compose-prod.yaml up --build -d
         EOF
+
