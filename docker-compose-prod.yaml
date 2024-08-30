@@ -13,10 +13,10 @@ services:
     environment:
       MAIL_PASSWORD: "vVtVASLsViAdwF6"
     container_name: "kasper-back"
-  front:
+ front:
     image: "jackblack178/kasper-front:localhost"
     ports:
-      - "80:5173"
+      - "8082:5173"  # Заменили порт 80 на 8082
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
