@@ -15,7 +15,7 @@ services:
   front:
     image: "jackblack178/kasper-front:localhost"
     ports:
-      - "8082:5173"  # Replaced port 80 with 8082
+      - "8082:80"  # Replaced port 80 with 8082
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
