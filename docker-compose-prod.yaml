@@ -45,4 +45,3 @@ networks:
 
 volumes:
   pgdata: {}
-
