@@ -21,19 +21,11 @@ jobs:
         ls -la ~/.ssh/
         cat ~/.ssh/id_rsa
 
-    - name: Test SSH Connection
-      run: |
-        ssh -v -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} "echo 'SSH connection successful'"
-
     - name: Copy entire repository to Server
       run: |
         rsync -avz --progress -e "ssh -p ${{ secrets.SERVER_PORT_prod }} -o StrictHostKeyChecking=no" --exclude '.git' ./ ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
         # Проверка состояния после rsync
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} "ls -R /root/kasper-server"
-
-    - name: List files on Server
-      run: |
-        ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} 'ls -R /root/kasper-server'
 
     - name: Docker Compose Down
       run: |
