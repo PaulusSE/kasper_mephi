@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - pptx-gen-test
 
 jobs:
   deploy:
