@@ -2,8 +2,7 @@ name: Deploy to Production Server
 on:
   push:
     branches:
-      - master
-      - pptx-gen-test
+      - '**'  # запускаем при любом пуше
 
 jobs:
   deploy:
@@ -18,14 +17,12 @@ jobs:
         ssh-keyscan -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_HOST_prod }} >> ~/.ssh/known_hosts
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        # Проверка прав на SSH ключ
         ls -la ~/.ssh/
         cat ~/.ssh/id_rsa
 
     - name: Copy entire repository to Server
       run: |
         rsync -avz --progress -e "ssh -p ${{ secrets.SERVER_PORT_prod }} -o StrictHostKeyChecking=no" --exclude '.git' ./ ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }}:/root/kasper-server
-        # Проверка состояния после rsync
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT_prod }} ${{ secrets.SERVER_USER_prod }}@${{ secrets.SERVER_HOST_prod }} "ls -R /root/kasper-server"
 
     - name: Docker Compose Down
