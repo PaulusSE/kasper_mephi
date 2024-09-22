@@ -24,7 +24,8 @@ type (
 
 		UpdateStudentsProfile(ctx context.Context, userID, studentID uuid.UUID, studentInfo models.UpdateProfile) error
 
-		GetLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
+		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
+		GetStudentLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
 	}
 
 	DissertationService interface {

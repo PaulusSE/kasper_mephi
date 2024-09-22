@@ -61,6 +61,8 @@ type (
 
 		UpdateProfile(ctx *gin.Context)
 		DeleteMarks(ctx *gin.Context)
+
+		GetPresentation(ctx *gin.Context)
 	}
 
 	SupervisorHandler interface {
@@ -99,7 +101,7 @@ type (
 		GetStudents(ctx *gin.Context)
 		GetSupervisorsStudents(ctx *gin.Context)
 
-		GetPresentation(ctx *gin.Context)
+		// GetPresentation(ctx *gin.Context)
 
 		DeleteGroups(ctx *gin.Context)
 		DeleteSpecializations(ctx *gin.Context)
@@ -251,7 +253,7 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 	r.POST("/administrator/enum/specializations/:token", h.administrator.AddSpecializations)
 	r.POST("/administrator/enum/groups/:token", h.administrator.AddGroups)
 
-	r.POST("/administrator/students/report/download/:token", h.administrator.GetPresentation)
+	r.POST("/students/report/download/:token", h.student.GetPresentation)
 
 	r.GET("/administrator/students/list/:token", h.administrator.GetStudents)
 

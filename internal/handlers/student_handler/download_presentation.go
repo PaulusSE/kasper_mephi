@@ -1,110 +1,79 @@
 package student_handler
 
-// import (
-// 	"bytes"
-// 	"encoding/json"
-// 	"fmt"
-// 	"log"
-// 	"net/http"
-// 	"os"
-// 	"os/exec"
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"os/exec"
 
-// 	"uir_draft/internal/handlers/student_handler/request_models"
-// 	"uir_draft/internal/pkg/models"
+	"uir_draft/internal/pkg/models"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/samber/lo"
-// )
+	"github.com/gin-gonic/gin"
+)
 
-// // DownloadDissertation
-// //
-// //	@Summary		Скачивание файла презентации
-// //
-// //	@Description	Скачивание файла презентации
-// //
-// //	@Tags			Student
-// //	@Accept			json
-// //
-// //	@Produce		json
-// //
-// //	@Success		200		"Файл"
-// //	@Param			token	path		string										true	"Токен пользователя"
-// //	@Param			input	body		request_models.DownloadPresentationRequest	true	"Данные"
-// //	@Failure		400		{string}	string										"Неверный формат данных"
-// //	@Failure		401		{string}	string										"Токен протух"
-// //	@Failure		204		{string}	string										"Нет записей в БД"
-// //	@Failure		500		{string}	string										"Ошибка на стороне сервера"
-// //	@Router			/students/dissertation/file/{token} [put]
-// func (h *StudentHandler) DownloadPresentation(ctx *gin.Context) {
-// 	user, err := h.authenticate(ctx)
-// 	if err != nil {
-// 		ctx.AbortWithError(models.MapErrorToCode(err), err)
-// 		return
-// 	}
+// GetPresentation
+//
+//	@Summary		Загрузка презентации
+//	@Description	Генерация и загрузка презентации для студента
+//	@Tags			Student.Presentation
+//	@Accept			json
+//	@Produce		application/vnd.openxmlformats-officedocument.presentationml.presentation
+//	@Success		200		{file}		file	"Презентация"
+//	@Param			token		path	string	true	"Токен пользователя"
+//	@Param			semester	query	int		true	"Семестр"
+//	@Failure		400			{string}	string	"Неверный формат данных"
+//	@Failure		401			{string}	string	"Токен протух"
+//	@Failure		500			{string}	string	"Ошибка на стороне сервера"
+//	@Router			/students/report/download/{token} [post]
+func (h *StudentHandler) GetPresentation(ctx *gin.Context) {
+	user, err := h.authenticate(ctx)
+	if err != nil {
+		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
+		return
+	}
 
-// 	reqBody := request_models.DownloadPresentationRequest{}
-// 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-// 		ctx.AbortWithError(http.StatusBadRequest, err)
-// 		return
-// 	}
+	// Получаем параметр semester из тела запроса
+	var requestData struct {
+		Semester int `json:"semester"`
+	}
 
-// 	presentation, err := h.dissertation.GetDissertationData(ctx, user.KasperID, reqBody.Semester)
-// 	if err != nil {
-// 		ctx.AbortWithError(models.MapErrorToCode(err), err)
-// 		return
-// 	}
+	if err := ctx.BindJSON(&requestData); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
 
-// 	log.Printf("download dissertation info: %v", presentation)
-// 	log.Printf("download dissertation file_name: %v", lo.FromPtr(presentation.FileName))
+	presentationData, err := h.student.GetPresentation(ctx, user.KasperID)
+	if err != nil {
+		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
+		return
+	}
 
-// 	if dissertation.FileName == nil {
-// 		ctx.Status(http.StatusNoContent)
-// 		return
-// 	}
+	load, err := h.student.GetStudentLoad(ctx, user.KasperID, int32(requestData.Semester))
+	if err != nil {
+		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
+		return
+	}
 
-// 	data := map[string]interface{}{
-// 		"full_name":       "Евченко Игорь Владимирович",
-// 		"supervisor_name": "Тихомирова Анна Николаевна",
-// 		"slides_data": []map[string]interface{}{
-// 			{
-// 				"type":      "text",
-// 				"content":   "Пример текста",
-// 				"left":      50,       // Pt(50) в Python будет умножено на Pt
-// 				"top":       50,       // Pt(50)
-// 				"width":     620,      // Pt(620)
-// 				"height":    60,       // Pt(60)
-// 				"font_size": 12,       // Размер шрифта
-// 				"bold":      false,    // Жирный шрифт
-// 				"alignment": "CENTER", // Выравнивание
-// 			},
-// 		},
-// 	}
+	presentationData.PedagogicalData = load
 
-// 	jsonData, err := json.Marshal(data)
-// 	if err != nil {
-// 		log.Fatalf("Ошибка сериализации данных: %s", err)
-// 	}
+	reportDataJSON, err := json.Marshal(presentationData)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Вызов Python скрипта для генерации презентации
+	cmd := exec.Command("python3", "generate_presentation.py")
+	cmd.Stdin = bytes.NewReader(reportDataJSON)
 
-// 	cmd := exec.Command("python", "script.py")
-// 	cmd.Stdin = bytes.NewReader(jsonData)
-// 	cmd.Stdout = os.Stdout
-// 	cmd.Stderr = os.Stderr
+	var out bytes.Buffer
+	cmd.Stdout = &out
 
-// 	if err := cmd.Run(); err != nil {
-// 		log.Fatalf("Ошибка выполнения скрипта: %s", err)
-// 	}
+	if err := cmd.Run(); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-// 	log.Println("Python скрипт успешно выполнен.")
-
-// 	dst := fmt.Sprintf("./dissertations/%s/semester%d/%s",
-// 		dissertation.StudentID.String(), dissertation.Semester, lo.FromPtr(dissertation.FileName))
-
-// 	_, err = os.Stat(dst)
-// 	if err != nil {
-// 		ctx.AbortWithError(models.MapErrorToCode(err), err)
-// 		return
-// 	}
-
-// 	ctx.Header("Content-Disposition", lo.FromPtr(dissertation.FileName))
-// 	ctx.File(dst)
-// }
+	// Отправляем файл пользователю
+	ctx.Header("Content-Disposition", "attachment; filename=report.pptx")
+	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.presentationml.presentation", out.Bytes())
+}

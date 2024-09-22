@@ -26,6 +26,9 @@ type (
 		ArchiveSupervisor(ctx context.Context, supervisors []models.SupervisorStatus) error
 		GetNotRegisteredUsers(ctx context.Context) ([]models.UserInfo, error)
 		DeleteNotRegisteredUsers(ctx context.Context, userIDs []uuid.UUID) error
+
+		// GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
+		// GetStudentLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
 	}
 
 	Authenticator interface {
@@ -57,10 +60,10 @@ type (
 		SendInviteEmails(ctx context.Context, credentials []models.UsersCredentials, templatePath string) error
 	}
 
-	PresentationService interface {
-		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
-		GetStudentLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
-	}
+	// PresentationService interface {
+	// 	GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
+	// 	GetStudentLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
+	// }
 )
 
 type AdministratorHandler struct {
@@ -69,7 +72,7 @@ type AdministratorHandler struct {
 	enum          EnumService
 	supervisor    SupervisorService
 	email         EmailService
-	presentation  PresentationService
+	// presentation  PresentationService
 }
 
 func NewHandler(
@@ -78,7 +81,7 @@ func NewHandler(
 	enum EnumService,
 	supervisor SupervisorService,
 	email EmailService,
-	presentation PresentationService,
+	// presentation PresentationService,
 ) *AdministratorHandler {
 	return &AdministratorHandler{
 		user:          user,
@@ -86,7 +89,7 @@ func NewHandler(
 		enum:          enum,
 		supervisor:    supervisor,
 		email:         email,
-		presentation:  presentation,
+		// presentation:  presentation,
 	}
 }
 
