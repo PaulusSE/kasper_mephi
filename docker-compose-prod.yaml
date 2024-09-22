@@ -1,32 +1,30 @@
-version: "3.7"
-
+version: '3' 
 services:
   server:
     build:
+      context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
     restart: always
     volumes:
       - ./dissertations:/usr/src/app/dissertations
-    # extra_hosts:
-    #   - "postgres:95.163.231.174"
     environment:
       MAIL_PASSWORD: "vVtVASLsViAdwF6"
     container_name: "kasper-back"
+
   front:
-    image: "jackblack178/kasper-front:localhost"
+    image: pavelsem21/kasper-front:0.1.4
     ports:
-      - "80:5173"
+      - "8082:80"
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - server
     container_name: "kasper-front"
+
   postgres:
     image: postgres:latest
-    container_name: postgres_container
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
@@ -37,13 +35,11 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./new_kasper.sql:/var/desctop.sql
 
-
 networks:
   default:
     driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1450
     name: kasper-test
 
 volumes:
-  pgdata:
+  pgdata: {}
+
