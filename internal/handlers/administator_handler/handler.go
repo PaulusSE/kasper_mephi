@@ -56,6 +56,11 @@ type (
 	EmailService interface {
 		SendInviteEmails(ctx context.Context, credentials []models.UsersCredentials, templatePath string) error
 	}
+
+	PresentationService interface {
+		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
+		GetStudentLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
+	}
 )
 
 type AdministratorHandler struct {
@@ -64,6 +69,7 @@ type AdministratorHandler struct {
 	enum          EnumService
 	supervisor    SupervisorService
 	email         EmailService
+	presentation  PresentationService
 }
 
 func NewHandler(
@@ -72,6 +78,7 @@ func NewHandler(
 	enum EnumService,
 	supervisor SupervisorService,
 	email EmailService,
+	presentation PresentationService,
 ) *AdministratorHandler {
 	return &AdministratorHandler{
 		user:          user,
@@ -79,6 +86,7 @@ func NewHandler(
 		enum:          enum,
 		supervisor:    supervisor,
 		email:         email,
+		presentation:  presentation,
 	}
 }
 

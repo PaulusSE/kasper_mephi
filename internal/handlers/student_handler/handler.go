@@ -43,11 +43,6 @@ type (
 		GetDissertationData(ctx context.Context, studentID uuid.UUID, semester int32) (model.Dissertations, error)
 	}
 
-	// PresentationService interface {
-	// 	// GetPresentationData - возвращает информацию о презентации (файле)
-	// 	GetPresentationData(ctx context.Context, studentID uuid.UUID, semester int32) (model.Presentation, error)
-	// }
-
 	ScientificWorksService interface {
 		// ScientificWorksToStatus - ставит статус для научных работ
 		ScientificWorksToStatus(ctx context.Context, studentID uuid.UUID, status model.ApprovalStatus, semester int32) error
@@ -118,6 +113,10 @@ type (
 		GetAllMarks(ctx context.Context, studentID uuid.UUID) (models.AllMarks, error)
 		UpsertExamResults(ctx context.Context, studentID uuid.UUID, exams []models.ExamRequest) error
 		DeleteExamMarks(ctx context.Context, semester int32, ids []uuid.UUID) error
+	}
+
+	PresentationService interface {
+		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
 	}
 )
 
