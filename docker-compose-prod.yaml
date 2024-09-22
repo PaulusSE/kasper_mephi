@@ -14,7 +14,7 @@ services:
     container_name: "kasper-back"
 
   front:
-    image: pavelsem21/kasper-front:0.1.4.5
+    image: pavelsem21/kasper-front:0.1.4
     ports:
       - "8082:80"
     restart: always
