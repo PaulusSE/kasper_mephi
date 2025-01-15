@@ -2,6 +2,7 @@ package student_handler
 
 import (
 	"context"
+	"errors"
 
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/student_handler/request_models"
@@ -161,7 +162,14 @@ func (h *StudentHandler) authenticate(ctx *gin.Context) (*model.Users, error) {
 
 	user, err := h.authenticator.AuthenticateWithUserType(ctx, token, model.UserType_Student.String())
 	if err != nil {
-		return user, err
+		// Если администратор, возвращаем пользователя без ошибки
+		if errors.Is(err, models.ErrWrongUserType) {
+			user, err = h.authenticator.AuthenticateWithUserType(ctx, token, model.UserType_Admin.String())
+			if err == nil {
+				return user, nil
+			}
+		}
+		return nil, err
 	}
 
 	return user, nil

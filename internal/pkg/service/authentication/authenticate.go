@@ -38,7 +38,13 @@ func (s *Service) AuthenticateWithUserType(ctx context.Context, token, userType 
 		return nil, errors.Wrap(err, "AuthenticateWithUserType()")
 	}
 
+	// Проверка типа пользователя
 	if user.UserType.String() != userType {
+		// Разрешаем администратору доступ ко всем типам
+		if user.UserType == model.UserType_Admin {
+			return &user, nil
+		}
+		// Дополнительно проверяем Supervisor
 		if user.UserType == model.UserType_Admin && userType == model.UserType_Supervisor.String() {
 			return &user, nil
 		}

@@ -3,6 +3,7 @@ package student_handler
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os/exec"
 
@@ -28,6 +29,7 @@ import (
 func (h *StudentHandler) GetPresentation(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
+		log.Printf("Authentication error: %v", err)
 		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
 		return
 	}
@@ -38,18 +40,23 @@ func (h *StudentHandler) GetPresentation(ctx *gin.Context) {
 	}
 
 	if err := ctx.BindJSON(&requestData); err != nil {
+		log.Printf("Invalid request data: %v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
 
+	log.Printf("User authenticated: %s, Semester: %d", user.KasperID, requestData.Semester)
+
 	presentationData, err := h.student.GetPresentation(ctx, user.KasperID)
 	if err != nil {
+		log.Printf("Error fetching presentation data: %v", err)
 		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
 		return
 	}
 
 	load, err := h.student.GetStudentLoad(ctx, user.KasperID, int32(requestData.Semester))
 	if err != nil {
+		log.Printf("Error fetching student load: %v", err)
 		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
 		return
 	}
@@ -58,22 +65,36 @@ func (h *StudentHandler) GetPresentation(ctx *gin.Context) {
 
 	reportDataJSON, err := json.Marshal(presentationData)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("Error marshaling presentation data: %v", err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare presentation data"})
 		return
 	}
-	// Вызов Python скрипта для генерации презентации
+
+	log.Printf("Presentation data JSON prepared successfully")
+
 	cmd := exec.Command("python3", "generate_presentation.py")
 	cmd.Stdin = bytes.NewReader(reportDataJSON)
 
 	var out bytes.Buffer
+	var stderr bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 
+	log.Printf("Executing Python script for presentation generation")
 	if err := cmd.Run(); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("Python script error: %s", stderr.String())
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error running presentation script"})
 		return
 	}
 
-	// Отправляем файл пользователю
+	if out.Len() == 0 {
+		log.Printf("Python script returned empty output")
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Generated presentation is empty"})
+		return
+	}
+
+	log.Printf("Presentation generated successfully, sending response")
+
 	ctx.Header("Content-Disposition", "attachment; filename=report.pptx")
 	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.presentationml.presentation", out.Bytes())
 }

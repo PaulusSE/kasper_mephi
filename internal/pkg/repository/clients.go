@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
@@ -45,15 +46,20 @@ func (r *ClientRepository) GetStudentStatusTx(ctx context.Context, tx pgx.Tx, st
 			table.Groups.GroupName,
 		).
 		FROM(table.Students.
-			INNER_JOIN(table.Groups, table.Students.GroupID.EQ(table.Groups.GroupID)).
-			INNER_JOIN(table.Specializations, table.Students.SpecID.EQ(table.Specializations.SpecID)),
+			LEFT_JOIN(table.Groups, table.Students.GroupID.EQ(table.Groups.GroupID)).
+			LEFT_JOIN(table.Specializations, table.Students.SpecID.EQ(table.Specializations.SpecID)),
 		).
 		WHERE(table.Students.StudentID.EQ(postgres.UUID(studentID))).
 		Sql()
 
+	log.Printf("Executing SQL: %s with args: %v", stmt, args)
+
 	row := tx.QueryRow(ctx, stmt, args...)
 	student := models.Student{}
 	if err := scanStudentStatus(row, &student); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Student{}, errors.New("no student found with the given ID")
+		}
 		return models.Student{}, errors.Wrap(err, "GetStudentStatusTx()")
 	}
 
