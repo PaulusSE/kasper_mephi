@@ -16,6 +16,9 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
+COPY internal/handlers/student_handler/recomendations.py /usr/src/app/recomendations.py
+COPY internal/handlers/student_handler/articles.json /usr/src/app/articles.json
+
 RUN go build -o ./bin/server ./cmd/kasper/main.go
 
 EXPOSE 8080
