@@ -24,7 +24,7 @@ services:
 
   postgres:
     image: postgres:latest
-    container_name: postgres
+    container_name: postgres_new
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
