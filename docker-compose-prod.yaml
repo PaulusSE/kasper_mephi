@@ -41,6 +41,5 @@ networks:
   default:
     driver: bridge
     name: kasper-test
-
 volumes:
   pgdata: {}
