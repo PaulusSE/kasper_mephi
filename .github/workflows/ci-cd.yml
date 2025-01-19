@@ -1,8 +1,8 @@
-name: Deploy to Production Server
+name: Deploy to Other Branches
 on:
   push:
-    branches:
-      - '**'  # запускаем при любом пуше
+    branches-ignore:
+      - release
 
 jobs:
   deploy:
