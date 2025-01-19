@@ -17,8 +17,10 @@ jobs:
         echo "${{ secrets.RELEASE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         eval "$(ssh-agent -s)"
-        ssh-add ~/.ssh/id_rsa
+        echo "${{ secrets.RELEASE_SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_rsa
         ssh-keyscan -p ${{ secrets.RELEASE_SERVER_PORT }} ${{ secrets.RELEASE_SERVER_HOST }} >> ~/.ssh/known_hosts
+      env:
+        RELEASE_SSH_PASSPHRASE: ${{ secrets.RELEASE_SSH_PASSPHRASE }}
 
     - name: Copy repository to server
       run: |
