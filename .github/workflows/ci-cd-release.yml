@@ -31,5 +31,5 @@ jobs:
     - name: Restart application
       run: |
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.RELEASE_SERVER_PORT }} root@${{ secrets.RELEASE_SERVER_HOST }} \
-        "docker-compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml down && \
-        docker-compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml up --build -d"
+        "docker compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml down && \
+        docker compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml up --build -d"
