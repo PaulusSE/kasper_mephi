@@ -14,26 +14,24 @@ jobs:
     - name: Set up SSH key and SSH agent
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.RELEASE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+        echo "${{ secrets.RELEASE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
         eval "$(ssh-agent -s)"
-        ssh-add ~/.ssh/id_rsa
+        echo "${{ secrets.RELEASE_SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_ed25519
         ssh-keyscan -p ${{ secrets.RELEASE_SERVER_PORT }} ${{ secrets.RELEASE_SERVER_HOST }} >> ~/.ssh/known_hosts
+      env:
+        RELEASE_SSH_PASSPHRASE: ${{ secrets.RELEASE_SSH_PASSPHRASE }}
 
-    - name: Test SSH connection
+    - name: Test SSH Connection
       run: |
-        ssh -o StrictHostKeyChecking=no -p ${{ secrets.RELEASE_SERVER_PORT }} root@${{ secrets.RELEASE_SERVER_HOST }} "echo SSH connection successful"
+        ssh -o StrictHostKeyChecking=no -p ${{ secrets.RELEASE_SERVER_PORT }} root@${{ secrets.RELEASE_SERVER_HOST }} "echo Connection successful"
 
-    - name: Copy repository to server
+    - name: Deploy files using rsync
       run: |
         rsync -avz --progress -e "ssh -p ${{ secrets.RELEASE_SERVER_PORT }} -o StrictHostKeyChecking=no" --exclude '.git' ./ root@${{ secrets.RELEASE_SERVER_HOST }}:/var/www/www-root/data/www/mephi-22.ru/
 
-    - name: Docker Compose Down
+    - name: Restart application
       run: |
         ssh -o StrictHostKeyChecking=no -p ${{ secrets.RELEASE_SERVER_PORT }} root@${{ secrets.RELEASE_SERVER_HOST }} \
-        "docker-compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml down"
-
-    - name: Docker Compose Up and Rebuild
-      run: |
-        ssh -o StrictHostKeyChecking=no -p ${{ secrets.RELEASE_SERVER_PORT }} root@${{ secrets.RELEASE_SERVER_HOST }} \
-        "docker-compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml up --build -d"
+        "docker-compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml down && \
+        docker-compose -f /var/www/www-root/data/www/mephi-22.ru/docker-compose-prod.yaml up --build -d"
