@@ -14,7 +14,11 @@ services:
     container_name: "kasper-back"
 
   front:
-    image: pavelsem21/kasper-front:0.1.9.1
+    image: pavelsem21/kasper-front:0.1.9.3
+    environment:
+      VITE_API_URL: "http://localhost:8080/api"
+#      VITE_API_URL: "https://mephi-22.ru/api"
+#      VITE_API_URL: "https://kaspermephi.ru/api"
     ports:
       - "8082:5173"
     restart: always
@@ -24,7 +28,7 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: postgres_new
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
