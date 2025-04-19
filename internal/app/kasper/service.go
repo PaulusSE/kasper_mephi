@@ -130,6 +130,7 @@ type (
 		FirstSupervisorRegistry(ctx *gin.Context)
 		ChangePassword(ctx *gin.Context)
 		TokenCheck(ctx *gin.Context)
+		CreateAnonymousToken(ctx *gin.Context)
 	}
 )
 
@@ -280,6 +281,7 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 
 	// AuthenticationHandler init
 	r.POST("/authorize", h.authentication.Authorize)
+	r.POST("/authorize/anonymous", h.authentication.CreateAnonymousToken)
 
 	r.POST("/authorize/registration/student/:token", h.authentication.FirstStudentRegistry)
 	r.POST("/authorize/registration/supervisor/:token", h.authentication.FirstSupervisorRegistry)

@@ -1,6 +1,7 @@
 package student_handler
 
 import (
+	"log"
 	"net/http"
 
 	"uir_draft/internal/pkg/models"
@@ -25,14 +26,17 @@ import (
 //	@Failure		500		{string}	string			"Ошибка на стороне сервера"
 //	@Router			/student/enum/groups/{token} [get]
 func (h *StudentHandler) GetGroups(ctx *gin.Context) {
-	_, err := h.authenticate(ctx)
-	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+	//_, err := h.authenticate(ctx)
+	//if err != nil {
+	//	ctx.AbortWithError(models.MapErrorToCode(err), err)
+	//	return
+	//}
+	if err := h.ValidateToken(ctx); err != nil {
 		return
 	}
-
 	groups, err := h.enum.GetGroups(ctx)
 	if err != nil {
+		log.Printf("Error getting supervisors: %v\n", err)
 		ctx.AbortWithError(models.MapErrorToCode(err), err)
 		return
 	}

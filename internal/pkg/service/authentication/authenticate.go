@@ -198,3 +198,38 @@ func (s *Service) GetUserProfile(ctx context.Context, userID uuid.UUID) (model.U
 
 	return user, nil
 }
+
+func (s *Service) CreateAnonymousToken(ctx context.Context, token string) error {
+	_, err := s.db.Exec(ctx, `
+        INSERT INTO authorization_token (token_number, is_active)
+        VALUES ($1, false)
+    `, token)
+	return err
+}
+
+func (s *Service) TokenExists(ctx context.Context, token string) (bool, error) {
+	row := s.db.QueryRow(ctx,
+		`SELECT COUNT(*) > 0 FROM authorization_token WHERE token_number = $1`, token)
+	var exists bool
+	if err := row.Scan(&exists); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (s *Service) CreateUser(ctx context.Context, user *model.Users) error {
+	_, err := s.db.Exec(ctx,
+		`INSERT INTO users (user_id, email, password, kasper_id, user_type, registered)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+		user.UserID, user.Email, user.Password, user.KasperID, user.UserType.String(), user.Registered)
+	return err
+}
+
+func (s *Service) AttachTokenToUser(ctx context.Context, token string, userID uuid.UUID) error {
+	_, err := s.db.Exec(ctx,
+		`UPDATE authorization_token
+         SET user_id = $1, is_active = true
+       WHERE token_number = $2`,
+		userID, token)
+	return err
+}

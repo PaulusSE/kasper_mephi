@@ -3,6 +3,8 @@ package student_handler
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
 
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/student_handler/request_models"
@@ -95,6 +97,7 @@ type (
 	Authenticator interface {
 		// Authenticate - проводит аутентификацию пользователя
 		AuthenticateWithUserType(ctx context.Context, token, userType string) (*model.Users, error)
+		TokenExists(ctx context.Context, token string) (bool, error)
 	}
 
 	EmailService interface {
@@ -173,4 +176,20 @@ func (h *StudentHandler) authenticate(ctx *gin.Context) (*model.Users, error) {
 	}
 
 	return user, nil
+}
+
+// ValidateToken проверяет, что переданный в запросе токен есть в таблице authorization_token
+// Если токен невалиден — прервёт контекст с соответствующим статусом
+func (h *StudentHandler) ValidateToken(ctx *gin.Context) error {
+	token := helpers.GetToken(ctx)
+	ok, err := h.authenticator.TokenExists(ctx.Request.Context(), token)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+		return err
+	}
+	if !ok {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return fmt.Errorf("token not found")
+	}
+	return nil
 }
