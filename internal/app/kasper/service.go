@@ -2,6 +2,7 @@ package kasper
 
 import (
 	"time"
+	"uir_draft/internal/pkg/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -283,8 +284,8 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 	r.POST("/authorize", h.authentication.Authorize)
 	r.POST("/authorize/anonymous", h.authentication.CreateAnonymousToken)
 
-	r.POST("/authorize/registration/student/:token", h.authentication.FirstStudentRegistry)
-	r.POST("/authorize/registration/supervisor/:token", h.authentication.FirstSupervisorRegistry)
+	r.POST("/authorize/registration/student/:token", middleware.RateLimitMiddleware(10, 20*time.Minute), h.authentication.FirstStudentRegistry)
+	r.POST("/authorize/registration/supervisor/:token", middleware.RateLimitMiddleware(10, 20*time.Minute), h.authentication.FirstSupervisorRegistry)
 
 	r.POST("/authorize/password/change/:token", h.authentication.ChangePassword)
 	r.GET("/authorize/token/check/:token", h.authentication.TokenCheck)
