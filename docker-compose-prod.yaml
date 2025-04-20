@@ -14,7 +14,7 @@ services:
     container_name: "kasper-back"
 
   front:
-    image: pavelsem21/kasper-front:0.1.9.5
+    image: pavelsem21/kasper-front:0.1.9.6
     environment:
     #  VITE_API_URL: "http://localhost:8080/api"
     #  VITE_API_URL: "http://server:8080/api"
