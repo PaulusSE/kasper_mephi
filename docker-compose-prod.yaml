@@ -43,7 +43,7 @@ services:
 networks:
   default:
     driver: bridge
-    name: kasper-test
+#    name: kasper-test
 
 volumes:
   pgdata: {}
