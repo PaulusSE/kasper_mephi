@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/authorization_handler/request_models"
 	"uir_draft/internal/pkg/helpers"
@@ -35,23 +34,31 @@ type (
 	SupervisorService interface {
 		InitSupervisor(ctx context.Context, user model.Users, registry request_models.FirstSupervisorRegistry) error
 	}
+
+	RegistrationService interface {
+		CreateStudentRequest(ctx context.Context, hashedPassword []byte, data request_models.FirstStudentRegistry) error
+		CreateSupervisorRequest(ctx context.Context, hashedPassword []byte, data request_models.FirstSupervisorRegistry) error
+	}
 )
 
 type AuthorizationHandler struct {
 	authenticator Authenticator
 	student       StudentService
 	supervisor    SupervisorService
+	registration  RegistrationService
 }
 
 func NewHandler(
 	authenticator Authenticator,
 	student StudentService,
 	supervisor SupervisorService,
+	registration RegistrationService,
 ) *AuthorizationHandler {
 	return &AuthorizationHandler{
 		authenticator: authenticator,
 		student:       student,
 		supervisor:    supervisor,
+		registration:  registration,
 	}
 }
 

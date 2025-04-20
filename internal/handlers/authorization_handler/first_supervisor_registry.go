@@ -1,17 +1,13 @@
 package authorization_handler
 
 import (
-	"github.com/google/uuid"
+	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/authorization_handler/request_models"
 	"uir_draft/internal/pkg/helpers"
-	"uir_draft/internal/pkg/models"
-
-	"github.com/gin-gonic/gin"
-	"github.com/samber/lo"
 )
 
 // FirstSupervisorRegistry
@@ -53,26 +49,13 @@ func (h *AuthorizationHandler) FirstSupervisorRegistry(ctx *gin.Context) {
 	}
 	log.Printf("first_student_registry request body: %v", req)
 	log.Printf("email value: %v", lo.FromPtr(&req.Email))
-	newUser := model.Users{
-		UserID:     uuid.New(),
-		Email:      *req.Email,
-		Password:   string(hashed),
-		KasperID:   uuid.New(), // будет supervisor_id
-		UserType:   model.UserType_Supervisor,
-		Registered: true,
-	}
-	if err := h.authenticator.CreateUser(ctx.Request.Context(), &newUser); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot create user"})
-		return
-	}
-	if err := h.authenticator.AttachTokenToUser(ctx.Request.Context(), anonToken, newUser.UserID); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot activate token"})
-		return
-	}
-	if err := h.supervisor.InitSupervisor(ctx, newUser, req); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+	if err := h.registration.CreateSupervisorRequest(ctx.Request.Context(), hashed, req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot save request"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": anonToken})
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Ваша заявка принята и ожидает подтверждения",
+		"token":   anonToken,
+	})
 }

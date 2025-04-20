@@ -86,6 +86,9 @@ type (
 		GetStudentsReportComments(ctx *gin.Context)
 
 		GetAllMarks(ctx *gin.Context)
+
+		ListRegistrationRequests(ctx *gin.Context)
+		ReviewRegistrationRequest(ctx *gin.Context)
 	}
 
 	AdministratorHandler interface {
@@ -123,6 +126,9 @@ type (
 
 		GetNotRegisteredUsers(ctx *gin.Context)
 		DeleteNotRegisteredUsers(ctx *gin.Context)
+
+		ListRegistrationRequests(ctx *gin.Context)
+		ReviewRegistrationRequest(ctx *gin.Context)
 	}
 
 	AuthenticationHandler interface {
@@ -241,6 +247,8 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 
 	r.PUT("/supervisors/student/marks/:token", h.supervisor.GetAllMarks)
 	//r.POST("/supervisors/student/marks/:token", h.supervisor.UpsertSupervisorMark)
+	r.GET("/supervisor/registration_requests/:token", h.supervisor.ListRegistrationRequests)
+	r.POST("/supervisor/registration_requests/:token", h.supervisor.ReviewRegistrationRequest)
 
 	// AdministratorHandler init
 	r.POST("/administrator/student/change/:token", h.administrator.ChangeSupervisor)
@@ -279,6 +287,9 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 
 	r.GET("/administrator/users/not_registered/:token", h.administrator.GetNotRegisteredUsers)
 	r.PUT("/administrator/users/not_registered/:token", h.administrator.DeleteNotRegisteredUsers)
+
+	r.GET("/administrator/registration_requests/:token", h.administrator.ListRegistrationRequests)
+	r.POST("/administrator/registration_requests/:token", h.administrator.ReviewRegistrationRequest)
 
 	// AuthenticationHandler init
 	r.POST("/authorize", h.authentication.Authorize)

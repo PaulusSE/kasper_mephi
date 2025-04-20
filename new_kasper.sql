@@ -339,6 +339,19 @@ create table patents
 --     comments        TEXT
 -- );
 
+CREATE TYPE request_status AS ENUM ('pending','approved','rejected');
+
+CREATE TABLE registration_requests (
+                                       request_id     UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+                                       email          VARCHAR(128)   NOT NULL UNIQUE,
+                                       password_hash  TEXT           NOT NULL,
+                                       user_type      user_type      NOT NULL,               -- student | supervisor
+                                       payload        JSONB          NOT NULL,               -- остальные поля заявки
+                                       status         request_status NOT NULL DEFAULT 'pending',
+                                       created_at     TIMESTAMPTZ    NOT NULL DEFAULT now(),
+                                       processed_by   UUID           NULL,                   -- user_id админа/рук‑ля
+                                       processed_at   TIMESTAMPTZ    NULL
+);
 
 insert into users
 values ('9bb06a04-3518-4362-bdf1-823591154464', 'chenpasha31@gmail.com',

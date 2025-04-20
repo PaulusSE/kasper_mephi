@@ -26,7 +26,8 @@ import (
 //	@Failure		401		{string}	string						"Токен протух"
 //	@Failure		204		{string}	string						"Нет записей в БД"
 //	@Failure		500		{string}	string						"Ошибка на стороне сервера"
-//	@Router			/authorize [post]
+//
+// @Router			/authorize [post]
 func (h *AuthorizationHandler) Authorize(ctx *gin.Context) {
 	reqBody := models.AuthorizeRequest{}
 	if err := ctx.ShouldBindJSON(&reqBody); err != nil {

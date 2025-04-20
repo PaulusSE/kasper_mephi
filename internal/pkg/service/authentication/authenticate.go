@@ -115,6 +115,9 @@ func (s *Service) Authorize(ctx context.Context, request models.AuthorizeRequest
 		if err != nil {
 			return errors.Wrap(err, "getting user info")
 		}
+		if !user.Registered {
+			return models.ErrUserNotApproved
+		}
 
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 		if err != nil {

@@ -1,15 +1,11 @@
 package authorization_handler
 
 import (
-	"github.com/google/uuid"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
-	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/authorization_handler/request_models"
 	"uir_draft/internal/pkg/helpers"
-	"uir_draft/internal/pkg/models"
-
-	"github.com/gin-gonic/gin"
 )
 
 // FirstStudentRegistry
@@ -32,11 +28,6 @@ import (
 //	@Failure		500		{string}	string								"Ошибка на стороне сервера"
 //	@Router			/authorize/registration/student/{token} [post]
 func (h *AuthorizationHandler) FirstStudentRegistry(ctx *gin.Context) {
-	//user, err := h.authenticateStudent(ctx)
-	//if err != nil {
-	//	ctx.AbortWithError(models.MapErrorToCode(err), err)
-	//	return
-	//}
 	if err := h.ValidateToken(ctx); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 		return
@@ -56,26 +47,13 @@ func (h *AuthorizationHandler) FirstStudentRegistry(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "hash error"})
 		return
 	}
-	newUser := model.Users{
-		UserID:     uuid.New(),
-		Email:      req.Email,
-		Password:   string(hashed),
-		KasperID:   uuid.New(),
-		UserType:   model.UserType_Student,
-		Registered: true,
-	}
-	if err := h.authenticator.CreateUser(ctx.Request.Context(), &newUser); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot create user"})
-		return
-	}
-	if err := h.authenticator.AttachTokenToUser(ctx.Request.Context(), anonToken, newUser.UserID); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot activate token"})
-		return
-	}
-	if err = h.student.InitStudent(ctx, newUser, req); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+	if err := h.registration.CreateStudentRequest(ctx.Request.Context(), hashed, req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot save request"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": anonToken})
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Ваша заявка принята и ожидает подтверждения",
+		"token":   anonToken,
+	})
 }
