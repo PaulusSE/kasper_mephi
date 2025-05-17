@@ -1,25 +1,42 @@
-FROM golang:1.21.5-alpine3.18
-
-# Установка Python и pip
-RUN apk add --update --no-cache python3 py3-pip && \
-    python3 -m ensurepip && \
-    rm -r /usr/lib/python*/ensurepip && \
-    pip3 install --no-cache --upgrade pip setuptools
-
-# Установка библиотеки python-pptx
-RUN pip3 install python-pptx
+# СТЕЙДЖ 1: Build Go binary на любой удобной платформе
+FROM golang:1.21.5-alpine3.18 AS go-builder
 
 WORKDIR /usr/src/app
 
-# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+# Кэшируем модули заранее
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
-COPY internal/handlers/student_handler/recomendations.py /usr/src/app/recomendations.py
-COPY internal/handlers/student_handler/articles.json /usr/src/app/articles.json
+RUN go build -o /bin/server ./cmd/kasper/main.go
 
-RUN go build -o ./bin/server ./cmd/kasper/main.go
+FROM python:3.11-slim
+
+# ———————
+# 1. Установим все build-зависимости для pip и ML
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Установим Python-зависимости (PyTorch подтянет wheel)
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
+    && python -m spacy download ru_core_news_sm
+
+WORKDIR /usr/src/app
+
+# 3. Копируем Go-бинарь из предыдущего стейджа
+COPY --from=go-builder /bin/server /usr/src/app/bin/server
+
+# 4. Копируем python-скрипты и данные (убери этот COPY, если они уже есть после COPY . .)
+COPY internal/app/reco_model_2.py /usr/src/app/reco_model_2.py
+COPY internal/app/parsed_articles.pkl /usr/src/app/parsed_articles.pkl
+
+# 5. Копируем остальной проект (если нужен)
+COPY . .
 
 EXPOSE 8080
 

@@ -59,7 +59,8 @@ func main() {
 	emailService := email.NewService("info@kasper-mephi.ru", os.Getenv("MAIL_PASSWORD"), "mail.hosting.reg.ru", db, usersRepo, clientRepo)
 	enumService := enum.NewService(db)
 
-	studentHandler := student_handler.NewHandler(studentService, authenticationService, emailService, enumService, adminService)
+	cache := student_handler.NewPgRecommendationCache(db)
+	studentHandler := student_handler.NewHandler(studentService, authenticationService, emailService, enumService, adminService, cache)
 	supervisorHandler := supervisor_handler.NewHandler(studentService, authenticationService, supervisorService, emailService, registrationService)
 	adminHandler := administator_handler.NewHandler(adminService, authenticationService, enumService, supervisorService, emailService, registrationService, studentService)
 	authenticationHandler := authorization_handler.NewHandler(authenticationService, studentService, supervisorService, registrationService)

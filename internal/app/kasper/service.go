@@ -208,7 +208,8 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 	r.GET("/student/enum/specializations/:token", h.student.GetSpecializations)
 	r.GET("/student/enum/groups/:token", h.student.GetGroups)
 	r.GET("/student/supervisors/list/:token", h.student.GetSupervisors)
-	r.GET("/supervisors/recommended-articles/:token", h.student.GetRecommendedArticles)
+	r.PUT("/supervisors/recommended-articles/:token", h.student.GetRecommendedArticles)
+	r.PUT("/students/recommended-articles/:token", h.student.GetRecommendedArticles)
 	r.POST("/students/dissertation/progress/percent/:token", h.student.UpdateProgressiveness)
 
 	r.GET("/student/profile/:token", h.student.GetStudentProfile)

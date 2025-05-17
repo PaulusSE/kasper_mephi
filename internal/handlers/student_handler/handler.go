@@ -2,9 +2,12 @@ package student_handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"net/http"
+	"time"
 
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/student_handler/request_models"
@@ -24,7 +27,7 @@ type (
 		GetStudentStatus(ctx context.Context, studentID uuid.UUID) (models.Student, error)
 		UpdateStudentsProgressiveness(ctx context.Context, studentID uuid.UUID, progress int32) error
 		GetStudentsProfile(ctx context.Context, studentID uuid.UUID) (models.StudentProfile, error)
-
+		// GetStudentsProgressiveness(ctx context.Context, tx pgx.Tx, studentID uuid.UUID) ([]model.Progressiveness, error)
 		UpdateStudentsProfile(ctx context.Context, userID, studentID uuid.UUID, studentInfo models.UpdateProfile) error
 
 		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
@@ -123,20 +126,25 @@ type (
 	PresentationService interface {
 		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
 	}
+
+	RecommendationCacheService interface {
+		GetCachedRecommendations(ctx context.Context, studentID uuid.UUID, semester int32, topN int) ([]Recommendation, *time.Time, error)
+		SaveCachedRecommendations(ctx context.Context, studentID uuid.UUID, semester int32, topN int, recs []Recommendation) error
+	}
 )
 
 type StudentHandler struct {
-	student      StudentService
-	dissertation DissertationService
-	scientific   ScientificWorksService
-	load         TeachingLoadService
-	mark         MarksService
-
-	authenticator Authenticator
-	email         EmailService
-	enum          EnumService
-	admin         AdminService
-	report        ReportService
+	student             StudentService
+	dissertation        DissertationService
+	scientific          ScientificWorksService
+	load                TeachingLoadService
+	mark                MarksService
+	recommendationCache RecommendationCacheService
+	authenticator       Authenticator
+	email               EmailService
+	enum                EnumService
+	admin               AdminService
+	report              ReportService
 }
 
 func NewHandler(
@@ -145,18 +153,20 @@ func NewHandler(
 	email EmailService,
 	enum EnumService,
 	admin AdminService,
+	recommendationCache RecommendationCacheService,
 ) *StudentHandler {
 	return &StudentHandler{
-		student:       student,
-		dissertation:  student,
-		scientific:    student,
-		load:          student,
-		authenticator: authenticator,
-		mark:          student,
-		email:         email,
-		enum:          enum,
-		admin:         admin,
-		report:        student,
+		student:             student,
+		dissertation:        student,
+		scientific:          student,
+		load:                student,
+		authenticator:       authenticator,
+		mark:                student,
+		email:               email,
+		enum:                enum,
+		admin:               admin,
+		report:              student,
+		recommendationCache: recommendationCache,
 	}
 }
 
@@ -192,4 +202,56 @@ func (h *StudentHandler) ValidateToken(ctx *gin.Context) error {
 		return fmt.Errorf("token not found")
 	}
 	return nil
+}
+
+type PgRecommendationCache struct {
+	DB *pgxpool.Pool
+}
+
+func NewPgRecommendationCache(db *pgxpool.Pool) *PgRecommendationCache {
+	return &PgRecommendationCache{DB: db}
+}
+
+func (c *PgRecommendationCache) GetCachedRecommendations(
+	ctx context.Context, studentID uuid.UUID, semester int32, topN int,
+) ([]Recommendation, *time.Time, error) {
+	const query = `
+		SELECT recommendations
+		FROM recommendations_cache
+		WHERE student_id = $1 AND semester = $2 AND top_n = $3
+		LIMIT 1
+	`
+	var data []byte
+	var updatedAt time.Time
+	err := c.DB.QueryRow(ctx, query, studentID, semester, topN).Scan(&data, &updatedAt)
+	if err != nil {
+		// Если кэша нет — это не ошибка, просто возвращаем nil, nil
+		if err.Error() == "no rows in result set" { // pgx.ErrNoRows
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+
+	var recs []Recommendation
+	if err := json.Unmarshal(data, &recs); err != nil {
+		return nil, nil, err
+	}
+	return recs, &updatedAt, nil
+}
+
+func (c *PgRecommendationCache) SaveCachedRecommendations(
+	ctx context.Context, studentID uuid.UUID, semester int32, topN int, recs []Recommendation,
+) error {
+	const query = `
+		INSERT INTO recommendations_cache(student_id, semester, top_n, recommendations, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (student_id, semester, top_n)
+		DO UPDATE SET recommendations = EXCLUDED.recommendations, updated_at = EXCLUDED.updated_at
+	`
+	data, err := json.Marshal(recs)
+	if err != nil {
+		return err
+	}
+	_, err = c.DB.Exec(ctx, query, studentID, semester, topN, data, time.Now())
+	return err
 }

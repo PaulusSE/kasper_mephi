@@ -353,6 +353,17 @@ CREATE TABLE registration_requests (
                                        processed_at   TIMESTAMPTZ    NULL
 );
 
+CREATE TABLE IF NOT EXISTS recommendations_cache (
+                                                     id serial PRIMARY KEY,
+                                                     student_id uuid NOT NULL,
+                                                     semester int NOT NULL,
+                                                     top_n int NOT NULL,
+                                                     recommendations jsonb NOT NULL,
+                                                     updated_at timestamp NOT NULL DEFAULT NOW(),
+    UNIQUE (student_id, semester, top_n)
+);
+
+
 insert into users
 values ('9bb06a04-3518-4362-bdf1-823591154464', 'chenpasha31@gmail.com',
         '$2a$10$0maw/NL4yvpjAIxDPakEKu8md3ifOVb2E4NHlO6dFPtDFIiSKoJoK', 'cc5f3793-6bd9-46cc-ab4b-8f257d37b9ac',
