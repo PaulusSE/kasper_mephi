@@ -34,7 +34,7 @@ COPY --from=go-builder /bin/server /usr/src/app/bin/server
 # 4. Копируем python-скрипты и данные (убери этот COPY, если они уже есть после COPY . .)
 COPY internal/app/reco_model_2.py /usr/src/app/reco_model_2.py
 COPY internal/app/parsed_articles.pkl /usr/src/app/parsed_articles.pkl
-
+COPY internal/pkg/service/presentation/generate_presentation.py /usr/src/app/generate_presentation.py
 # 5. Копируем остальной проект (если нужен)
 COPY . .
 

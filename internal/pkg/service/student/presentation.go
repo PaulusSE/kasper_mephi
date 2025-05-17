@@ -2,6 +2,7 @@ package student
 
 import (
 	"context"
+	"fmt"
 
 	"uir_draft/internal/pkg/models"
 
@@ -10,19 +11,42 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (s *Service) GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error) {
+func (s *Service) GetPresentation(ctx context.Context, studentID uuid.UUID, semester int) (models.ReportData, error) {
 	reportData := models.ReportData{}
+	universityFullName := "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\nФЕДЕРАЛЬНОЕ ... НИЯУ МИФИ"
+	instituteAndDepartment := "ИНСТИТУТ ... КАФЕДРА 22 (Кибернетика)"
+	educationDirection := "Информатика и вычислительная техника"
+	educationDirectionCode := "09.06.01"
+	educationProfile := "Системный анализ, управление и обработка информации, статистика"
+	educationProfileCode := "2.3.5"
+	reportTitle := fmt.Sprintf("Отчет аспиранта за %d семестр", semester)
+	city := "Москва"
+	year := "2024" // можно генерировать
+	logoMephi := "MEPhI_Logo2014_en.png"
+	logoKafedra := "kaf22.png"
 
 	err := s.db.BeginFunc(ctx, func(tx pgx.Tx) error {
+		fmt.Printf("STUDEN_ID - %s \n", studentID)
 		student, err := s.studRepo.GetStudentStatusTx(ctx, tx, studentID)
+		if err != nil {
+			return errors.Wrap(err, "GetStudentStatusTx()")
+		}
+
+		// Получаем данные о текущем научном руководителе
+		supervisor, err := s.studRepo.GetStudentsActualSupervisorTx(ctx, tx, studentID)
+		if err != nil {
+			// Можно возвращать "Не назначен" или пусто, если не найдено
+			supervisor.FullName = "Не назначен"
+		}
+
+		semesterProgress, err := s.dissertationRepo.GetStudentsProgressiveness(ctx, tx, studentID)
 		if err != nil {
 			return err
 		}
-
-		// semesterProgress, err := s.dissertationRepo.GetSemesterProgressTx(ctx, tx, studentID)
-		// if err != nil {
-		// 	return err
-		// }
+		var progressPerCents []int
+		for _, progItem := range semesterProgress {
+			progressPerCents = append(progressPerCents, int(progItem.Progressiveness))
+		}
 
 		// disTitles, err := s.dissertationRepo.GetDissertationTitlesTx(ctx, tx, studentID)
 		// if err != nil {
@@ -54,37 +78,45 @@ func (s *Service) GetPresentation(ctx context.Context, studentID uuid.UUID) (mod
 		// 	return err
 		// }
 
-		// load, err := s.studRepo.GetLoad(ctx, student.StudentID, student.ActualSemester)
-		// if err != nil {
-		// 	return err
-		// }
+		//load, err := s.GetStudentLoad(ctx, student.StudentID, int32(semester))
+		//if err != nil {
+		//	return err
+		//}
 
 		reportData = models.ReportData{
-			CurrentSemester:      student.ActualSemester,
-			FullName:             student.FullName,
-			SupervisorName:       "Supervisor Name",     // Здесь нужно заменить на реальные данные
-			EducationDirection:   "Education Direction", // Здесь нужно заменить на реальные данные
-			EducationProfile:     student.Specialization,
-			EnrollmentDate:       student.StartDate,
-			Specialty:            student.Specialization,
-			TrainingYearFGOS:     "Training Year FGOS", // Здесь нужно заменить на реальные данные
-			CandidateExams:       []models.Exam{},
-			Category:             student.Category,
-			Topic:                "Dissertation Topic", // Здесь нужно заменить на реальные данные
-			ReportPeriodWork:     "Report Period Work", // Здесь нужно заменить на реальные данные
-			ScientificObject:     "Scientific Object",  // Здесь нужно заменить на реальные данные
-			ScientificSubject:    "Scientific Subject", // Здесь нужно заменить на реальные данные
-			MentorRate:           "Mentor Rate",        // Здесь нужно заменить на реальные данные
-			ProgressPercents:     []int{},              // Заполнить данными
-			ProgressDescriptions: []string{},           // Заполнить данными
-			Publications:         []models.Publication{},
-			AllPublications:      []models.Publication{}, // Заполнить данными
-			// PedagogicalData:      load,                   // Заполнить данными
-			// ReportOtherAchievements: "Other Achievements", // Здесь нужно заменить на реальные данные
-			// PedagogicalDataAll:    []PedagogicalWorkSummary{}, // Заполнить данными
-			NextSemesterPlan: []string{"Plan 1", "Plan 2"}, // Заполнить данными
+			UniversityFullName:     universityFullName,
+			InstituteAndDepartment: instituteAndDepartment,
+			EducationDirection:     educationDirection,
+			EducationDirectionCode: educationDirectionCode,
+			EducationProfile:       educationProfile,
+			EducationProfileCode:   educationProfileCode,
+			ReportTitle:            reportTitle,
+			City:                   city,
+			Year:                   year,
+			FullName:               student.FullName,
+			SupervisorName:         supervisor.FullName,
+			CurrentSemester:        semester,
+			EnrollmentDate:         student.StartDate.Format("2006-01-02"),
+			Specialty:              student.Specialization,
+			//TrainingYearFGOS:       student.TrainingYearFGOS,
+			//CandidateExams:         candidateExams,
+			Category: student.Category,
+			//Topic:                  student.Topic,
+			//ReportPeriodWork:       student.ReportPeriodWork,
+			//ScientificObject:       student.ScientificObject,
+			//ScientificSubject:      student.ScientificSubject,
+			//MentorRate:             student.MentorRate,
+			ProgressPercents: progressPerCents,
+			//ProgressDescriptions:   progressDescriptions,
+			//Publications:           publications,
+			//AllPublications:        allPublications,
+			//PedagogicalData:        pedagogicalData,
+			//ReportOtherAchievments: student.ReportOtherAchievments,
+			//PedagogicalDataAll:     load,
+			//NextSemesterPlan:       student.NextSemesterPlan,
+			LogoMephi:   logoMephi,
+			LogoKafedra: logoKafedra,
 		}
-
 		return nil
 	})
 	if err != nil {

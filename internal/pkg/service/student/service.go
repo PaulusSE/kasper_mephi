@@ -41,6 +41,7 @@ type (
 		GetAllStudentsSupervisors(ctx context.Context, tx pgx.Tx, studentID uuid.UUID) ([]models.SupervisorFull, error)
 		GetStudentProfile(ctx context.Context, tx pgx.Tx, studentID uuid.UUID) (models.StudentProfile, error)
 		UpdateStudent(ctx context.Context, tx pgx.Tx, student model.Students) error
+		GetStudentsActualSupervisorTx(ctx context.Context, tx pgx.Tx, studentID uuid.UUID) (models.Supervisor, error)
 	}
 
 	DissertationRepository interface {

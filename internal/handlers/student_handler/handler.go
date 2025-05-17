@@ -30,7 +30,7 @@ type (
 		// GetStudentsProgressiveness(ctx context.Context, tx pgx.Tx, studentID uuid.UUID) ([]model.Progressiveness, error)
 		UpdateStudentsProfile(ctx context.Context, userID, studentID uuid.UUID, studentInfo models.UpdateProfile) error
 
-		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
+		GetPresentation(ctx context.Context, studentID uuid.UUID, semester int) (models.ReportData, error)
 		GetStudentLoad(ctx context.Context, studentID uuid.UUID, actSem int32) ([]models.PedagogicalWork, error)
 	}
 
@@ -124,7 +124,7 @@ type (
 	}
 
 	PresentationService interface {
-		GetPresentation(ctx context.Context, studentID uuid.UUID) (models.ReportData, error)
+		GetPresentation(ctx context.Context, studentID uuid.UUID, semester int) (models.ReportData, error)
 	}
 
 	RecommendationCacheService interface {

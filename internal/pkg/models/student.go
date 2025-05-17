@@ -122,29 +122,39 @@ type UpdateProfile struct {
 
 // Определим новую структуру для передачи данных в Python скрипт
 type ReportData struct {
-	CurrentSemester        int32                    `json:"current_semester"`
-	FullName               string                   `json:"full_name"`
-	SupervisorName         string                   `json:"supervisor_name"`
-	EducationDirection     string                   `json:"education_direction"`
-	EducationProfile       string                   `json:"education_profile"`
-	EnrollmentDate         time.Time                `json:"enrollment_date"`
-	Specialty              string                   `json:"specialty"`
-	TrainingYearFGOS       string                   `json:"training_year_fgos"`
-	CandidateExams         []Exam                   `json:"candidate_exams"`
-	Category               string                   `json:"category"`
-	Topic                  string                   `json:"topic"`
-	ReportPeriodWork       string                   `json:"report_period_work"`
-	ScientificObject       string                   `json:"scientific_obj"`
-	ScientificSubject      string                   `json:"scientific_subj"`
-	MentorRate             string                   `json:"mentor_rate"`
-	ProgressPercents       []int                    `json:"progress_percents"`
-	ProgressDescriptions   []string                 `json:"progress_descriptions"`
-	Publications           []Publication            `json:"publications"`
-	AllPublications        []Publication            `json:"all_publications"`
-	PedagogicalData        []PedagogicalWork        `json:"pedagogical_data"`
-	ReportOtherAchievments string                   `json:"report_other_achievments"`
-	PedagogicalDataAll     []PedagogicalWorkSummary `json:"pedagogical_data_all"`
-	NextSemesterPlan       []string                 `json:"next_semester_plan"`
+	UniversityFullName     string `json:"university_full_name"`
+	InstituteAndDepartment string `json:"institute_and_department"`
+	EducationDirection     string `json:"education_direction"`
+	EducationDirectionCode string `json:"education_direction_code"`
+	EducationProfile       string `json:"education_profile"`
+	EducationProfileCode   string `json:"education_profile_code"`
+	ReportTitle            string `json:"report_title"`
+	City                   string `json:"city"`
+	Year                   string `json:"year"`
+
+	FullName               string     `json:"full_name"`
+	SupervisorName         string     `json:"supervisor_name"`
+	CurrentSemester        int        `json:"current_semester"`
+	EnrollmentDate         string     `json:"enrollment_date"`
+	Specialty              string     `json:"specialty"`
+	TrainingYearFGOS       string     `json:"training_year_fgos"`
+	CandidateExams         []string   `json:"candidate_exams"`
+	Category               string     `json:"category"`
+	Topic                  string     `json:"topic"`
+	ReportPeriodWork       string     `json:"report_period_work"`
+	ScientificObject       string     `json:"scientific_obj"`
+	ScientificSubject      string     `json:"scientific_subj"`
+	MentorRate             string     `json:"mentor_rate"`
+	ProgressPercents       []int      `json:"progress_percents"`
+	ProgressDescriptions   []string   `json:"progress_descriptions"`
+	Publications           [][]string `json:"publications"`
+	AllPublications        [][]string `json:"all_publications"`
+	PedagogicalData        [][]string `json:"pedagogical_data"`
+	ReportOtherAchievments string     `json:"report_other_achievments"`
+	PedagogicalDataAll     [][]string `json:"pedagogical_data_all"`
+	NextSemesterPlan       []string   `json:"next_semester_plan"`
+	LogoMephi              string     `json:"logo_mephi"`
+	LogoKafedra            string     `json:"logo_kafedra"`
 }
 
 // // Структура для экзаменов

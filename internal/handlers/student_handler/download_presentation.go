@@ -3,10 +3,11 @@ package student_handler
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"os/exec"
-
+	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/pkg/models"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,8 @@ func (h *StudentHandler) GetPresentation(ctx *gin.Context) {
 
 	// Получаем параметр semester из тела запроса
 	var requestData struct {
-		Semester int `json:"semester"`
+		Semester int       `json:"semester"`
+		UserID   uuid.UUID `json:"student_id"`
 	}
 
 	if err := ctx.BindJSON(&requestData); err != nil {
@@ -45,23 +47,28 @@ func (h *StudentHandler) GetPresentation(ctx *gin.Context) {
 		return
 	}
 
-	log.Printf("User authenticated: %s, Semester: %d", user.KasperID, requestData.Semester)
+	userID := user.KasperID
+	if user.UserType != model.UserType_Student {
+		userID = requestData.UserID
+	}
 
-	presentationData, err := h.student.GetPresentation(ctx, user.KasperID)
+	log.Printf("User authenticated: %s, Semester: %d", userID, requestData.Semester)
+
+	presentationData, err := h.student.GetPresentation(ctx, userID, requestData.Semester)
 	if err != nil {
 		log.Printf("Error fetching presentation data: %v", err)
 		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
 		return
 	}
 
-	load, err := h.student.GetStudentLoad(ctx, user.KasperID, int32(requestData.Semester))
-	if err != nil {
-		log.Printf("Error fetching student load: %v", err)
-		ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
-		return
-	}
+	//load, err := h.student.GetStudentLoad(ctx, userID, int32(requestData.Semester))
+	//if err != nil {
+	//	log.Printf("Error fetching student load: %v", err)
+	//	ctx.AbortWithStatusJSON(models.MapErrorToCode(err), gin.H{"error": err.Error()})
+	//	return
+	//}
 
-	presentationData.PedagogicalData = load
+	// presentationData.PedagogicalData = load
 
 	reportDataJSON, err := json.Marshal(presentationData)
 	if err != nil {
