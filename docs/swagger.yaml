@@ -853,6 +853,10 @@ definitions:
         type: string
       phone:
         type: string
+      position:
+        type: string
+      rank:
+        type: string
       supervisor_id:
         description: ID научного руководителя
         format: uuid
@@ -908,6 +912,10 @@ definitions:
         type: string
       phone:
         type: string
+      position:
+        type: string
+      rank:
+        type: string
       supervisor_id:
         description: ID научного руководителя
         format: uuid
@@ -961,16 +969,16 @@ definitions:
     properties:
       category:
         type: string
+      date:
+        type: string
       email:
         type: string
       full_name:
         description: Полное имя
         type: string
-      group_name:
+      group_id:
         type: integer
       phone:
-        type: string
-      start_date:
         type: string
       years:
         type: integer
@@ -1067,21 +1075,38 @@ definitions:
       category:
         description: Бюджетное или платное обучение
         type: string
+      email:
+        description: Department       string     `json:"department,omitempty"`
+        type: string
       full_name:
         type: string
       group_number:
         type: integer
       number_of_years:
         type: integer
+      password:
+        minLength: 8
+        type: string
       phone:
         type: string
       specialization_id:
-        description: Department       string     `json:"department,omitempty"`
         type: integer
       start_date:
         type: string
       supervisor_id:
         type: string
+    required:
+    - actual_semester
+    - category
+    - email
+    - full_name
+    - group_number
+    - number_of_years
+    - password
+    - phone
+    - specialization_id
+    - start_date
+    - supervisor_id
     type: object
   request_models.FirstSupervisorRegistry:
     properties:
@@ -1089,12 +1114,26 @@ definitions:
         type: string
       department:
         type: string
+      email:
+        type: string
       faculty:
         type: string
       full_name:
         type: string
+      password:
+        minLength: 8
+        type: string
       phone:
         type: string
+      position:
+        type: string
+      rank:
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    - phone
     type: object
   request_models.GetByStudentID:
     properties:
@@ -3155,6 +3194,44 @@ paths:
       summary: Получение всех оценок
       tags:
       - NEW
+    put:
+      consumes:
+      - application/json
+      description: Удаление кандидатских экзаменов
+      parameters:
+      - description: ID нагрузок и семестр
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/request_models.DeleteIDs'
+      - description: Токен пользователя
+        in: path
+        name: token
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "204":
+          description: Нет записей в БД
+          schema:
+            type: string
+        "400":
+          description: Неверный формат данных
+          schema:
+            type: string
+        "401":
+          description: Токен протух
+          schema:
+            type: string
+        "500":
+          description: Ошибка на стороне сервера
+          schema:
+            type: string
+      summary: Удаление кандидатских экзаменов
+      tags:
+      - NEW
   /students/profile/{token}:
     post:
       consumes:
@@ -3261,6 +3338,44 @@ paths:
       summary: Внесение комментариев для диссертации аспиранта
       tags:
       - NEW
+  /students/report/download/{token}:
+    post:
+      consumes:
+      - application/json
+      description: Генерация и загрузка презентации для студента
+      parameters:
+      - description: Токен пользователя
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Семестр
+        in: query
+        name: semester
+        required: true
+        type: integer
+      produces:
+      - application/vnd.openxmlformats-officedocument.presentationml.presentation
+      responses:
+        "200":
+          description: Презентация
+          schema:
+            type: file
+        "400":
+          description: Неверный формат данных
+          schema:
+            type: string
+        "401":
+          description: Токен протух
+          schema:
+            type: string
+        "500":
+          description: Ошибка на стороне сервера
+          schema:
+            type: string
+      summary: Загрузка презентации
+      tags:
+      - Student.Presentation
   /students/review/{token}:
     post:
       description: Переводит научные работы, пед нагрузку и диссертацию в статус 'in_review',

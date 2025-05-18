@@ -24,12 +24,10 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.56.2
 
       - name: Run golangci-lint
-        run: |
-          $(go env GOPATH)/bin/golangci-lint run ./...
+        run: make lint
 
       - name: Run tests
-        run: |
-          go test -v ./... -coverprofile=coverage.out
+        run: make test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -44,3 +42,6 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
+
+      - name: Generate Swagger Docs
+        run: make docs

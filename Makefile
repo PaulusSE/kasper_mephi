@@ -8,3 +8,6 @@ lint:
 
 test:
 	go test -v ./... -coverprofile=coverage.out
+
+docs:
+	swag init -g cmd/kasper/main.go -o ./docs
