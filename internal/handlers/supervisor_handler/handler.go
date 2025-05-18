@@ -2,10 +2,11 @@ package supervisor_handler
 
 import (
 	"context"
-
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
+	auth_req_models "uir_draft/internal/handlers/authorization_handler/request_models"
 	"uir_draft/internal/pkg/helpers"
 	"uir_draft/internal/pkg/models"
+	"uir_draft/internal/pkg/repository"
 	"uir_draft/internal/pkg/service/student"
 
 	"github.com/gin-gonic/gin"
@@ -35,20 +36,25 @@ type (
 		GetReportComments(ctx context.Context, studentID uuid.UUID) (models.ReportComments, error)
 	}
 
+	RegistrationService interface {
+		ReviewRequest(ctx context.Context, requestID uuid.UUID, approve bool) error
+		ListRequests(ctx context.Context, userType string) ([]repository.RegistrationRequest, error)
+		GetRequestByID(ctx context.Context, id uuid.UUID) (repository.RegistrationRequest, error)
+	}
+
 	Authenticator interface {
 		// Authenticate - проводит аутентификацию пользователя
 		AuthenticateWithUserType(ctx context.Context, token, userType string) (*model.Users, error)
+		CreateUser(ctx context.Context, user *model.Users) error
 	}
 
 	SupervisorService interface {
 		// UpsertFeedback - обновляет или добавляет фидбэк от научного руководителя
 		UpsertFeedback(ctx context.Context, studentID, supervisorID uuid.UUID, request models.FeedbackRequest) error
-
 		GetSupervisorsStudents(ctx context.Context, supervisorID uuid.UUID) ([]models.Student, error)
-
 		GetSupervisorProfile(ctx context.Context, supervisorID uuid.UUID) (models.SupervisorProfile, error)
-
 		UpsertSupervisorMark(ctx context.Context, studentID, supervisorID uuid.UUID, semester, mark int32) error
+		InitSupervisor(ctx context.Context, user model.Users, registry auth_req_models.FirstSupervisorRegistry) error
 	}
 
 	EmailService interface {
@@ -59,6 +65,7 @@ type (
 		GetStudentStatus(ctx context.Context, studentID uuid.UUID) (models.Student, error)
 		GetStudentsProfile(ctx context.Context, studentID uuid.UUID) (models.StudentProfile, error)
 		GetAllMarks(ctx context.Context, studentID uuid.UUID) (models.AllMarks, error)
+		InitStudent(ctx context.Context, user model.Users, req auth_req_models.FirstStudentRegistry) error
 	}
 )
 
@@ -71,6 +78,7 @@ type SupervisorHandler struct {
 	student       StudentService
 	email         EmailService
 	report        ReportService
+	registration  RegistrationService
 }
 
 func NewHandler(
@@ -78,6 +86,7 @@ func NewHandler(
 	authenticator Authenticator,
 	supervisor SupervisorService,
 	email EmailService,
+	registration RegistrationService,
 ) *SupervisorHandler {
 	return &SupervisorHandler{
 		dissertation:  dissertation,
@@ -88,6 +97,7 @@ func NewHandler(
 		student:       dissertation,
 		email:         email,
 		report:        dissertation,
+		registration:  registration,
 	}
 }
 

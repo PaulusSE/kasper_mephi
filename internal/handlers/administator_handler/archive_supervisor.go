@@ -28,18 +28,18 @@ import (
 func (h *AdministratorHandler) ArchiveSupervisor(ctx *gin.Context) {
 	_, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.ChangeSupervisorStatusRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
 	if err = h.user.ArchiveSupervisor(ctx, reqBody.Supervisors); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

@@ -1,12 +1,11 @@
 package authorization_handler
 
 import (
-	"net/http"
-
-	"uir_draft/internal/handlers/authorization_handler/request_models"
-	"uir_draft/internal/pkg/models"
-
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"uir_draft/internal/handlers/authorization_handler/request_models"
+	"uir_draft/internal/pkg/helpers"
 )
 
 // FirstStudentRegistry
@@ -29,27 +28,32 @@ import (
 //	@Failure		500		{string}	string								"Ошибка на стороне сервера"
 //	@Router			/authorize/registration/student/{token} [post]
 func (h *AuthorizationHandler) FirstStudentRegistry(ctx *gin.Context) {
-	user, err := h.authenticateStudent(ctx)
+	if err := h.ValidateToken(ctx); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+	anonToken := helpers.GetToken(ctx)
+
+	req := request_models.FirstStudentRegistry{}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "hash error"})
+		return
+	}
+	if err := h.registration.CreateStudentRequest(ctx.Request.Context(), hashed, req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot save request"})
 		return
 	}
 
-	reqBody := request_models.FirstStudentRegistry{}
-	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-
-	if reqBody.SupervisorID == nil {
-		ctx.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
-
-	if err = h.student.InitStudent(ctx, *user, reqBody); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
-		return
-	}
-
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Ваша заявка принята и ожидает подтверждения",
+		"token":   anonToken,
+	})
 }

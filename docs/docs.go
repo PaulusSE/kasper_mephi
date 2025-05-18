@@ -2861,6 +2861,63 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "description": "Удаление кандидатских экзаменов",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "NEW"
+                ],
+                "summary": "Удаление кандидатских экзаменов",
+                "parameters": [
+                    {
+                        "description": "ID нагрузок и семестр",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request_models.DeleteIDs"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Токен пользователя",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "204": {
+                        "description": "Нет записей в БД",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный формат данных",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Токен протух",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка на стороне сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
         "/students/profile/{token}": {
@@ -3004,6 +3061,63 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "Нет записей в БД",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Токен протух",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка на стороне сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/students/report/download/{token}": {
+            "post": {
+                "description": "Генерация и загрузка презентации для студента",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                ],
+                "tags": [
+                    "Student.Presentation"
+                ],
+                "summary": "Загрузка презентации",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен пользователя",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Семестр",
+                        "name": "semester",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Презентация",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный формат данных",
                         "schema": {
                             "type": "string"
                         }
@@ -5527,6 +5641,12 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "position": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                },
                 "supervisor_id": {
                     "description": "ID научного руководителя",
                     "type": "string",
@@ -5606,6 +5726,12 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "position": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "string"
+                },
                 "supervisor_id": {
                     "description": "ID научного руководителя",
                     "type": "string",
@@ -5678,6 +5804,9 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
+                "date": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -5685,13 +5814,10 @@ const docTemplate = `{
                     "description": "Полное имя",
                     "type": "string"
                 },
-                "group_name": {
+                "group_id": {
                     "type": "integer"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "start_date": {
                     "type": "string"
                 },
                 "years": {
@@ -5833,12 +5959,29 @@ const docTemplate = `{
         },
         "request_models.FirstStudentRegistry": {
             "type": "object",
+            "required": [
+                "actual_semester",
+                "category",
+                "email",
+                "full_name",
+                "group_number",
+                "number_of_years",
+                "password",
+                "phone",
+                "specialization_id",
+                "start_date",
+                "supervisor_id"
+            ],
             "properties": {
                 "actual_semester": {
                     "type": "integer"
                 },
                 "category": {
                     "description": "Бюджетное или платное обучение",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Department       string     ` + "`" + `json:\"department,omitempty\"` + "`" + `",
                     "type": "string"
                 },
                 "full_name": {
@@ -5850,11 +5993,14 @@ const docTemplate = `{
                 "number_of_years": {
                     "type": "integer"
                 },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
                 "phone": {
                     "type": "string"
                 },
                 "specialization_id": {
-                    "description": "Department       string     ` + "`" + `json:\"department,omitempty\"` + "`" + `",
                     "type": "integer"
                 },
                 "start_date": {
@@ -5867,11 +6013,20 @@ const docTemplate = `{
         },
         "request_models.FirstSupervisorRegistry": {
             "type": "object",
+            "required": [
+                "email",
+                "full_name",
+                "password",
+                "phone"
+            ],
             "properties": {
                 "degree": {
                     "type": "string"
                 },
                 "department": {
+                    "type": "string"
+                },
+                "email": {
                     "type": "string"
                 },
                 "faculty": {
@@ -5880,7 +6035,17 @@ const docTemplate = `{
                 "full_name": {
                     "type": "string"
                 },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
                 "phone": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "rank": {
                     "type": "string"
                 }
             }

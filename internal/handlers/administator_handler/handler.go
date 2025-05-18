@@ -2,11 +2,12 @@ package administator_handler
 
 import (
 	"context"
-
 	"uir_draft/internal/generated/new_kasper/new_uir/public/model"
 	"uir_draft/internal/handlers/administator_handler/request_models"
+	auth_req_models "uir_draft/internal/handlers/authorization_handler/request_models"
 	"uir_draft/internal/pkg/helpers"
 	"uir_draft/internal/pkg/models"
+	"uir_draft/internal/pkg/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -34,6 +35,8 @@ type (
 	Authenticator interface {
 		// AuthenticateWithUserType - проводит аутентификацию пользователя
 		AuthenticateWithUserType(ctx context.Context, token, userType string) (*model.Users, error)
+		CreateUser(ctx context.Context, users *model.Users) error
+		AttachTokenToUser(ctx context.Context, token string, userID uuid.UUID) error
 	}
 
 	EnumService interface {
@@ -54,10 +57,21 @@ type (
 	SupervisorService interface {
 		GetSupervisorsStudents(ctx context.Context, supervisorID uuid.UUID) ([]models.Student, error)
 		GetSupervisorProfile(ctx context.Context, supervisorID uuid.UUID) (models.SupervisorProfile, error)
+		InitSupervisor(ctx context.Context, user model.Users, registry auth_req_models.FirstSupervisorRegistry) error
 	}
 
 	EmailService interface {
 		SendInviteEmails(ctx context.Context, credentials []models.UsersCredentials, templatePath string) error
+	}
+
+	RegistrationService interface {
+		ListRequests(ctx context.Context, userType string) ([]repository.RegistrationRequest, error)
+		ReviewRequest(ctx context.Context, requestID uuid.UUID, approve bool) error
+		GetRequestByID(ctx context.Context, id uuid.UUID) (repository.RegistrationRequest, error)
+	}
+
+	StudentService interface {
+		InitStudent(ctx context.Context, user model.Users, req auth_req_models.FirstStudentRegistry) error
 	}
 
 	// PresentationService interface {
@@ -72,6 +86,8 @@ type AdministratorHandler struct {
 	enum          EnumService
 	supervisor    SupervisorService
 	email         EmailService
+	registration  RegistrationService
+	student       StudentService
 	// presentation  PresentationService
 }
 
@@ -81,6 +97,8 @@ func NewHandler(
 	enum EnumService,
 	supervisor SupervisorService,
 	email EmailService,
+	registration RegistrationService,
+	student StudentService,
 	// presentation PresentationService,
 ) *AdministratorHandler {
 	return &AdministratorHandler{
@@ -89,6 +107,8 @@ func NewHandler(
 		enum:          enum,
 		supervisor:    supervisor,
 		email:         email,
+		registration:  registration,
+		student:       student,
 		// presentation:  presentation,
 	}
 }

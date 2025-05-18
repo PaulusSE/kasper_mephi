@@ -25,25 +25,25 @@ import (
 func (h *StudentHandler) AllToReview(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		_ = ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.AllToReviewRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		_ = ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
 	err = h.dissertation.AllToStatus(ctx, user.KasperID, reqBody.Commentary, model.ApprovalStatus_OnReview.String())
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		_ = ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	err = h.email.SendMailToSupervisor(ctx, user.KasperID, "./internal/templates/student.html", "Работы")
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

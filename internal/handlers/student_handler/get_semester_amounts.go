@@ -25,15 +25,17 @@ import (
 //	@Failure		500		{string}	string					"Ошибка на стороне сервера"
 //	@Router			/students/enum/amounts/{token} [get]
 func (h *StudentHandler) GetSemesterAmounts(ctx *gin.Context) {
-	_, err := h.authenticate(ctx)
-	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+	//_, err := h.authenticate(ctx)
+	//if err != nil {
+	//	ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
+	//	return
+	//}
+	if err := h.ValidateToken(ctx); err != nil {
 		return
 	}
-
 	amounts, err := h.enum.GetSemestersAmount(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

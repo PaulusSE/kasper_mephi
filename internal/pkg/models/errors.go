@@ -18,6 +18,7 @@ var (
 	ErrHigherValueExpected   = errors.New("expected higher value")
 	ErrInvalidValue          = errors.New("invalid value")
 	ErrInvalidFormat         = errors.New("invalid format")
+	ErrUserNotApproved       = errors.New("user registration request is not approved yet")
 )
 
 func MapErrorToCode(err error) int {
@@ -31,6 +32,8 @@ func MapErrorToCode(err error) int {
 		errors.Is(err, ErrInvalidValue):
 		return http.StatusBadRequest
 	case errors.Is(err, ErrNonMutableStatus) || errors.Is(err, ErrWrongPassword):
+		return http.StatusForbidden
+	case errors.Is(err, ErrUserNotApproved):
 		return http.StatusForbidden
 	}
 

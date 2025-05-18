@@ -28,13 +28,13 @@ import (
 func (h *AdministratorHandler) DeleteGroups(ctx *gin.Context) {
 	_, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.DeleteEnumRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *AdministratorHandler) DeleteGroups(ctx *gin.Context) {
 	}
 
 	if err = h.enum.DeleteGroups(ctx, reqBody.IDs); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

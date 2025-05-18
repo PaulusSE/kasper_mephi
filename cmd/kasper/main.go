@@ -1,8 +1,9 @@
-package main
+package main //nolint
 
 import (
 	"context"
 	"os"
+	"uir_draft/internal/pkg/service/registration"
 
 	"uir_draft/internal/app/kasper"
 	"uir_draft/internal/handlers/administator_handler"
@@ -53,14 +54,16 @@ func main() {
 	adminService := admin.NewService(db)
 	supervisorService := supervisor.NewService(db)
 	authenticationService := authentication.NewService(db)
+	registrationService := registration.NewService(db)
 
 	emailService := email.NewService("info@kasper-mephi.ru", os.Getenv("MAIL_PASSWORD"), "mail.hosting.reg.ru", db, usersRepo, clientRepo)
 	enumService := enum.NewService(db)
 
-	studentHandler := student_handler.NewHandler(studentService, authenticationService, emailService, enumService, adminService)
-	supervisorHandler := supervisor_handler.NewHandler(studentService, authenticationService, supervisorService, emailService)
-	adminHandler := administator_handler.NewHandler(adminService, authenticationService, enumService, supervisorService, emailService)
-	authenticationHandler := authorization_handler.NewHandler(authenticationService, studentService, supervisorService)
+	cache := student_handler.NewPgRecommendationCache(db)
+	studentHandler := student_handler.NewHandler(studentService, authenticationService, emailService, enumService, adminService, cache)
+	supervisorHandler := supervisor_handler.NewHandler(studentService, authenticationService, supervisorService, emailService, registrationService)
+	adminHandler := administator_handler.NewHandler(adminService, authenticationService, enumService, supervisorService, emailService, registrationService, studentService)
+	authenticationHandler := authorization_handler.NewHandler(authenticationService, studentService, supervisorService, registrationService)
 
 	server := kasper.NewHTTPServer(studentHandler, supervisorHandler, adminHandler, authenticationHandler)
 	r := server.InitRouter()

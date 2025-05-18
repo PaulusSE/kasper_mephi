@@ -1,14 +1,13 @@
 package authorization_handler
 
 import (
-	"log"
-	"net/http"
-
-	"uir_draft/internal/handlers/authorization_handler/request_models"
-	"uir_draft/internal/pkg/models"
-
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
+	"golang.org/x/crypto/bcrypt"
+	"log"
+	"net/http"
+	"uir_draft/internal/handlers/authorization_handler/request_models"
+	"uir_draft/internal/pkg/helpers"
 )
 
 // FirstSupervisorRegistry
@@ -31,24 +30,32 @@ import (
 //	@Failure		500		{string}	string									"Ошибка на стороне сервера"
 //	@Router			/authorize/registration/supervisor/{token} [post]
 func (h *AuthorizationHandler) FirstSupervisorRegistry(ctx *gin.Context) {
-	user, err := h.authenticateSupervisor(ctx)
+	if err := h.ValidateToken(ctx); err != nil {
+		return
+	}
+	anonToken := helpers.GetToken(ctx)
+
+	var req request_models.FirstSupervisorRegistry
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "hash error"})
+		return
+	}
+	log.Printf("first_student_registry request body: %v", req)
+	log.Printf("email value: %v", lo.FromPtr(&req.Email))
+	if err := h.registration.CreateSupervisorRequest(ctx.Request.Context(), hashed, req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "cannot save request"})
 		return
 	}
 
-	reqBody := request_models.FirstSupervisorRegistry{}
-	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-
-	log.Printf("first_student_registry request body: %v", reqBody)
-	log.Printf("email value: %v", lo.FromPtr(reqBody.Email))
-	if err = h.supervisor.InitSupervisor(ctx, *user, reqBody); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
-		return
-	}
-
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Ваша заявка принята и ожидает подтверждения",
+		"token":   anonToken,
+	})
 }

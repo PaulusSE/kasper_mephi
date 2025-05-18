@@ -2,6 +2,7 @@ package kasper
 
 import (
 	"time"
+	"uir_draft/internal/pkg/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -85,6 +86,9 @@ type (
 		GetStudentsReportComments(ctx *gin.Context)
 
 		GetAllMarks(ctx *gin.Context)
+
+		ListRegistrationRequests(ctx *gin.Context)
+		ReviewRegistrationRequest(ctx *gin.Context)
 	}
 
 	AdministratorHandler interface {
@@ -122,6 +126,9 @@ type (
 
 		GetNotRegisteredUsers(ctx *gin.Context)
 		DeleteNotRegisteredUsers(ctx *gin.Context)
+
+		ListRegistrationRequests(ctx *gin.Context)
+		ReviewRegistrationRequest(ctx *gin.Context)
 	}
 
 	AuthenticationHandler interface {
@@ -130,6 +137,7 @@ type (
 		FirstSupervisorRegistry(ctx *gin.Context)
 		ChangePassword(ctx *gin.Context)
 		TokenCheck(ctx *gin.Context)
+		CreateAnonymousToken(ctx *gin.Context)
 	}
 )
 
@@ -200,7 +208,8 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 	r.GET("/student/enum/specializations/:token", h.student.GetSpecializations)
 	r.GET("/student/enum/groups/:token", h.student.GetGroups)
 	r.GET("/student/supervisors/list/:token", h.student.GetSupervisors)
-	r.GET("/supervisors/recommended-articles/:token", h.student.GetRecommendedArticles)
+	r.PUT("/supervisors/recommended-articles/:token", h.student.GetRecommendedArticles)
+	r.PUT("/students/recommended-articles/:token", h.student.GetRecommendedArticles)
 	r.POST("/students/dissertation/progress/percent/:token", h.student.UpdateProgressiveness)
 
 	r.GET("/student/profile/:token", h.student.GetStudentProfile)
@@ -239,6 +248,8 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 
 	r.PUT("/supervisors/student/marks/:token", h.supervisor.GetAllMarks)
 	//r.POST("/supervisors/student/marks/:token", h.supervisor.UpsertSupervisorMark)
+	r.GET("/supervisor/registration_requests/:token", h.supervisor.ListRegistrationRequests)
+	r.POST("/supervisor/registration_requests/:token", h.supervisor.ReviewRegistrationRequest)
 
 	// AdministratorHandler init
 	r.POST("/administrator/student/change/:token", h.administrator.ChangeSupervisor)
@@ -278,11 +289,15 @@ func (h *HTTPServer) InitRouter() *gin.Engine {
 	r.GET("/administrator/users/not_registered/:token", h.administrator.GetNotRegisteredUsers)
 	r.PUT("/administrator/users/not_registered/:token", h.administrator.DeleteNotRegisteredUsers)
 
+	r.GET("/administrator/registration_requests/:token", h.administrator.ListRegistrationRequests)
+	r.POST("/administrator/registration_requests/:token", h.administrator.ReviewRegistrationRequest)
+
 	// AuthenticationHandler init
 	r.POST("/authorize", h.authentication.Authorize)
+	r.POST("/authorize/anonymous", h.authentication.CreateAnonymousToken)
 
-	r.POST("/authorize/registration/student/:token", h.authentication.FirstStudentRegistry)
-	r.POST("/authorize/registration/supervisor/:token", h.authentication.FirstSupervisorRegistry)
+	r.POST("/authorize/registration/student/:token", middleware.RateLimitMiddleware(10, 20*time.Minute), h.authentication.FirstStudentRegistry)
+	r.POST("/authorize/registration/supervisor/:token", middleware.RateLimitMiddleware(10, 20*time.Minute), h.authentication.FirstSupervisorRegistry)
 
 	r.POST("/authorize/password/change/:token", h.authentication.ChangePassword)
 	r.GET("/authorize/token/check/:token", h.authentication.TokenCheck)

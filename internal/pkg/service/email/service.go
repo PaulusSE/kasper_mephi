@@ -99,7 +99,7 @@ func (s *Service) SendInviteEmails(_ context.Context, credentials []models.Users
 			return errors.Wrap(err, "parsing template")
 		}
 
-		err = t.Execute(&body, data)
+		_ = t.Execute(&body, data)
 
 		m := gomail.NewMessage()
 		m.SetHeader("From", s.sender)
@@ -169,7 +169,7 @@ func (s *Service) SendMailToStudent(ctx context.Context, studentID, supervisorID
 		return errors.Wrap(err, "parsing template")
 	}
 
-	err = t.Execute(&body, data)
+	_ = t.Execute(&body, data)
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.sender)
@@ -228,7 +228,7 @@ func (s *Service) SendMailToSupervisor(ctx context.Context, studentID uuid.UUID,
 		return errors.Wrap(err, "parsing template")
 	}
 
-	err = t.Execute(&body, data)
+	_ = t.Execute(&body, data)
 
 	mail := gomail.NewMessage()
 	mail.SetHeader("From", s.sender)
