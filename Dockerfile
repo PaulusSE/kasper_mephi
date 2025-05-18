@@ -14,13 +14,16 @@ FROM python:3.11-slim
 
 # ———————
 # 1. Установим все build-зависимости для pip и ML
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    python3-dev \
+    build-essential=12.4 \
+    python3-dev=3.10.6-1~22.04 \
     git \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Установим Python-зависимости (PyTorch подтянет wheel)
+
+# hadolint ignore=DL3013
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r /tmp/requirements.txt \
