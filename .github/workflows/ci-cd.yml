@@ -1,4 +1,4 @@
-name: Deploy to Production Server
+name: Deploy to Other Branches
 on:
   workflow_run:
     workflows: ["CI", "Deploy Swagger Docs"]
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch != 'release'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
