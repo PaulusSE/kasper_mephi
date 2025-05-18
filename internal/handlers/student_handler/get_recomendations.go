@@ -114,7 +114,6 @@ func (h *StudentHandler) GetRecommendedArticles(ctx *gin.Context) {
 	// Проверяем существование файла диссертации
 	if _, err := os.Stat(dissertationPath); os.IsNotExist(err) {
 		log.Printf("Dissertation file does not exist: %s", dissertationPath)
-		ctx.JSON(404, gin.H{"error": "Dissertation file not found"})
 		dissertationPath = ""
 	}
 
