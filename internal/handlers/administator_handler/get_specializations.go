@@ -27,13 +27,13 @@ import (
 func (h *AdministratorHandler) GetSpecializations(ctx *gin.Context) {
 	//_, err := h.authenticate(ctx)
 	//if err != nil {
-	//	ctx.AbortWithError(models.MapErrorToCode(err), err)
+	//	ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 	//	return
 	//}
 
 	specializations, err := h.enum.GetSpecializations(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

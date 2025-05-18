@@ -28,19 +28,19 @@ import (
 func (h *StudentHandler) UpsertSemesterProgress(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.UpsertProgressRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
 	err = h.dissertation.UpsertSemesterProgress(ctx, user.KasperID, reqBody.Progresses)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

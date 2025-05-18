@@ -27,13 +27,13 @@ import (
 func (h *StudentHandler) GetDissertationPage(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	dissertationPage, err := h.dissertation.GetDissertationPage(ctx, user.KasperID)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

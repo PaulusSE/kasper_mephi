@@ -27,13 +27,13 @@ import (
 func (h *StudentHandler) GetStudentProfile(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	student, err := h.student.GetStudentsProfile(ctx, user.KasperID)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 	ctx.JSON(http.StatusOK, student)

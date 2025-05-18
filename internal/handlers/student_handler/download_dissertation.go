@@ -35,19 +35,19 @@ import (
 func (h *StudentHandler) DownloadDissertation(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.DownloadDissertationRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
 	dissertation, err := h.dissertation.GetDissertationData(ctx, user.KasperID, reqBody.Semester)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *StudentHandler) DownloadDissertation(ctx *gin.Context) {
 
 	_, err = os.Stat(dst)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

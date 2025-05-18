@@ -27,13 +27,13 @@ import (
 func (h *AdministratorHandler) GetGroups(ctx *gin.Context) {
 	_, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	groups, err := h.enum.GetGroups(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

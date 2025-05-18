@@ -30,18 +30,18 @@ import (
 func (h *AuthorizationHandler) ChangePassword(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		_ = ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.ChangePasswordRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		_ = ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
 	if err = h.authenticator.ChangePassword(ctx, user.UserID, reqBody); err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		_ = ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

@@ -27,7 +27,7 @@ import (
 func (h *StudentHandler) GetSemesterAmounts(ctx *gin.Context) {
 	//_, err := h.authenticate(ctx)
 	//if err != nil {
-	//	ctx.AbortWithError(models.MapErrorToCode(err), err)
+	//	ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 	//	return
 	//}
 	if err := h.ValidateToken(ctx); err != nil {
@@ -35,7 +35,7 @@ func (h *StudentHandler) GetSemesterAmounts(ctx *gin.Context) {
 	}
 	amounts, err := h.enum.GetSemestersAmount(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

@@ -27,13 +27,13 @@ import (
 func (h *AdministratorHandler) GetSemesterAmounts(ctx *gin.Context) {
 	_, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	amounts, err := h.enum.GetSemestersAmount(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

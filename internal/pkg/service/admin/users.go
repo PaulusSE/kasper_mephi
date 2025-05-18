@@ -172,7 +172,7 @@ func (s *Service) AddUsers(ctx context.Context, users request_models.AddUsersReq
 
 		userCreds = append(userCreds, userCred)
 
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
 		domainUser := model.Users{
 			UserID:     uuid.New(),

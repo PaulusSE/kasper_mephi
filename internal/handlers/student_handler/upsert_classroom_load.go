@@ -28,13 +28,13 @@ import (
 func (h *StudentHandler) UpsertClassroomLoads(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 
 	reqBody := request_models.UpsertClassroomLoadRequest{}
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.AbortWithError(http.StatusBadRequest, err) //nolint
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *StudentHandler) UpsertClassroomLoads(ctx *gin.Context) {
 
 	err = h.load.UpsertClassroomLoad(ctx, user.KasperID, reqBody.Semester, reqBody.Loads)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

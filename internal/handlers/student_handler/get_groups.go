@@ -28,7 +28,7 @@ import (
 func (h *StudentHandler) GetGroups(ctx *gin.Context) {
 	//_, err := h.authenticate(ctx)
 	//if err != nil {
-	//	ctx.AbortWithError(models.MapErrorToCode(err), err)
+	//	ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 	//	return
 	//}
 	if err := h.ValidateToken(ctx); err != nil {
@@ -37,7 +37,7 @@ func (h *StudentHandler) GetGroups(ctx *gin.Context) {
 	groups, err := h.enum.GetGroups(ctx)
 	if err != nil {
 		log.Printf("Error getting supervisors: %v\n", err)
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

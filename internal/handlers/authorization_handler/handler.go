@@ -62,7 +62,7 @@ func NewHandler(
 	}
 }
 
-func (h *AuthorizationHandler) authenticateStudent(ctx *gin.Context) (*model.Users, error) {
+func (h *AuthorizationHandler) authenticateStudent(ctx *gin.Context) (*model.Users, error) { // nolint
 	token := helpers.GetToken(ctx)
 
 	user, err := h.authenticator.AuthenticateWithUserType(ctx, token, model.UserType_Student.String())
@@ -73,7 +73,7 @@ func (h *AuthorizationHandler) authenticateStudent(ctx *gin.Context) (*model.Use
 	return user, nil
 }
 
-func (h *AuthorizationHandler) authenticateSupervisor(ctx *gin.Context) (*model.Users, error) {
+func (h *AuthorizationHandler) authenticateSupervisor(ctx *gin.Context) (*model.Users, error) { // nolint
 	token := helpers.GetToken(ctx)
 
 	user, err := h.authenticator.AuthenticateWithUserType(ctx, token, model.UserType_Supervisor.String())

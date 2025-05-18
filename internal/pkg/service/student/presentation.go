@@ -127,13 +127,13 @@ func (s *Service) GetPresentation(ctx context.Context, studentID uuid.UUID, seme
 
 	// publications, err := h.student.GetPublications(ctx, student.StudentID)
 	// if err != nil {
-	// 	ctx.AbortWithError(http.StatusInternalServerError, err)
+	// 	ctx.AbortWithError(http.StatusInternalServerError, err) //nolint
 	// 	return
 	// }
 
 	// exams, err := h.student.GetExams(ctx, student.StudentID)
 	// if err != nil {
-	// 	ctx.AbortWithError(http.StatusInternalServerError, err)
+	// 	ctx.AbortWithError(http.StatusInternalServerError, err) //nolint
 	// 	return
 	// }
 

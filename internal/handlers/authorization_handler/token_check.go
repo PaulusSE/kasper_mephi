@@ -36,7 +36,7 @@ func (h *AuthorizationHandler) TokenCheck(ctx *gin.Context) {
 
 	user, err := h.authenticator.TokenCheck(ctx, token)
 	if err != nil {
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 

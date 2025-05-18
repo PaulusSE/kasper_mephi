@@ -61,7 +61,7 @@ func (h *StudentHandler) GetRecommendedArticles(ctx *gin.Context) {
 	user, err := h.authenticate(ctx)
 	if err != nil {
 		log.Printf("Authentication failed: %v\n", err)
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 	log.Printf("Authenticated user: %v\n", user)
@@ -71,7 +71,7 @@ func (h *StudentHandler) GetRecommendedArticles(ctx *gin.Context) {
 		reqBody := request_models.DownloadDissertationRequestSupOnlySemester{}
 		if err = ctx.ShouldBindJSON(&reqBody); err != nil {
 			log.Printf("Failed to bind JSON: %v\n", err)
-			ctx.AbortWithError(400, err)
+			ctx.AbortWithError(400, err) //nolint
 			return
 		}
 		req = RecoDTO{
@@ -82,7 +82,7 @@ func (h *StudentHandler) GetRecommendedArticles(ctx *gin.Context) {
 		reqBody := request_models.DownloadDissertationRequestSup{}
 		if err = ctx.ShouldBindJSON(&reqBody); err != nil {
 			log.Printf("Failed to bind JSON: %v\n", err)
-			ctx.AbortWithError(400, err)
+			ctx.AbortWithError(400, err) //nolint
 			return
 		}
 		req = RecoDTO{
@@ -96,7 +96,7 @@ func (h *StudentHandler) GetRecommendedArticles(ctx *gin.Context) {
 	dis, err := h.dissertation.GetDissertationData(ctx, req.StudentID, req.Semester)
 	if err != nil {
 		log.Printf("GetDissertationData error: %v\n", err)
-		ctx.AbortWithError(models.MapErrorToCode(err), err)
+		ctx.AbortWithError(models.MapErrorToCode(err), err) //nolint
 		return
 	}
 	if dis.FileName == nil {
