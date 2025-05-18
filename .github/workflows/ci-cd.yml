@@ -1,7 +1,7 @@
 name: Deploy to Other Branches
 on:
   workflow_run:
-    workflows: ["CI", "Deploy Swagger Docs"]
+    workflows: ["CI"]
     types:
       - completed
 
