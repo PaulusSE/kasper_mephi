@@ -1,7 +1,7 @@
 name: Deploy to Production Server
 on:
   workflow_run:
-    workflows: [ "CI" ]   # название файла ci.yml
+    workflows: ["CI", "Deploy Swagger Docs"]
     types:
       - completed
 
@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.workflow_run.head_sha }}
 
     - name: Set up SSH key and SSH command
       run: |
