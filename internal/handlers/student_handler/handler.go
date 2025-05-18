@@ -216,7 +216,7 @@ func (c *PgRecommendationCache) GetCachedRecommendations(
 	ctx context.Context, studentID uuid.UUID, semester int32, topN int,
 ) ([]Recommendation, *time.Time, error) {
 	const query = `
-		SELECT recommendations
+		SELECT recommendations, updated_at
 		FROM recommendations_cache
 		WHERE student_id = $1 AND semester = $2 AND top_n = $3
 		LIMIT 1
