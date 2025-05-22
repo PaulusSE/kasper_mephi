@@ -23,10 +23,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir "pip==23.0.1" && \
-    pip install --no-cache-dir -r /tmp/requirements.txt && \
-    python -m spacy download ru_core_news_sm@3.7.0 || \
-    { echo "Error installing dependencies"; exit 1; }
+RUN pip install --no-cache-dir torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN python -m spacy download ru_core_news_sm@3.7.0 || { echo "Error installing dependencies"; exit 1; }
+
 
 WORKDIR /usr/src/app
 COPY --from=go-builder /bin/server ./bin/server
