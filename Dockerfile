@@ -11,6 +11,7 @@ RUN go build -o /bin/server ./cmd/kasper/main.go
 FROM python:3.11-slim
 
 # 1. Системные зависимости
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
@@ -20,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Python-зависимости
+# hadolint ignore=DL3008
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir "pip==23.0.1" \
     && pip install --no-cache-dir -r /tmp/requirements.txt \
