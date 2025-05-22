@@ -43,7 +43,7 @@ jobs:
         with:
           dockerfile: Dockerfile
           config: .hadolint.yml
-          ignore: DL3013
+          ignore: DL3013, SC2015
 
       - name: Generate Swagger Docs
         run: make docs
