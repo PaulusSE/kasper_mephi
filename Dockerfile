@@ -23,9 +23,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 2. Python-зависимости
 # hadolint ignore=DL3008
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir "pip==23.0.1" \
-    && pip install --no-cache-dir -r /tmp/requirements.txt \
-    && python -m spacy download ru_core_news_sm@3.7.0
+RUN pip install --no-cache-dir "pip==23.0.1" && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
+    python -m spacy download ru_core_news_sm@3.7.0 || \
+    { echo "Error installing dependencies"; exit 1; }  # Явный выход при ошибке
 
 # 3. Копируем Go-бинарь и данные
 WORKDIR /usr/src/app
