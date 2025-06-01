@@ -15,39 +15,35 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Установка зависимостей с очисткой кэша
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
     libgomp1 \
-    libopenblas-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean all
+    libopenblas-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean all
 
-# Копируем и устанавливаем зависимости поэтапно
+# Копируем и устанавливаем зависимости
 COPY requirements.txt /tmp/requirements.txt
 
-# Установка Torch отдельно (самый большой пакет)
-RUN pip install --no-cache-dir torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
-
-# Установка остальных зависимостей
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
-# Загрузка модели Spacy
-RUN python -m spacy download ru_core_news_sm@3.7.0
-
-# Очистка временных файлов
-RUN apt-get purge -y --auto-remove build-essential python3-dev \
-    && rm -rf /root/.cache /tmp/*
+# Установка всех зависимостей и очистка в одном RUN
+RUN pip install --no-cache-dir torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
+    python -m spacy download ru_core_news_sm@3.7.0 && \
+    apt-get purge -y --auto-remove build-essential python3-dev && \
+    rm -rf /root/.cache /tmp/*
 
 # СТЕЙДЖ 3: Финальный образ (минимальный)
 FROM python:3.11-slim
 
 # Установка runtime зависимостей
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     libgomp1 \
-    libopenblas0 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean all
+    libopenblas0 && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean all
 
 # Копируем артефакты из предыдущих стейджей
 COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
