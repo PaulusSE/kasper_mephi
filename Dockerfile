@@ -30,7 +30,7 @@ COPY requirements.txt /tmp/requirements.txt
 # Установка всех зависимостей и очистка в одном RUN
 RUN pip install --no-cache-dir torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install --no-cache-dir -r /tmp/requirements.txt && \
-    python -m spacy download ru_core_news_sm@3.7.0 && \
+    python -m spacy download ru_core_news_sm && \
     apt-get purge -y --auto-remove build-essential python3-dev && \
     rm -rf /root/.cache /tmp/*
 
