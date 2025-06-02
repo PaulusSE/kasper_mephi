@@ -50,8 +50,9 @@ COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/li
 COPY --from=python-builder /usr/local/bin /usr/local/bin
 COPY --from=go-builder /bin/server /app/bin/server
 
-# Копируем необходимые файлы
+# Копируем необходимые файлы и конфиги
 WORKDIR /app
+COPY --from=go-builder /usr/src/app/configs ./configs
 COPY --from=go-builder /usr/src/app/internal/app/reco_model_2.py ./internal/app/
 COPY --from=go-builder /usr/src/app/internal/app/parsed_articles.pkl ./internal/app/
 COPY --from=go-builder /usr/src/app/internal/pkg/service/presentation/generate_presentation.py ./internal/pkg/service/presentation/
