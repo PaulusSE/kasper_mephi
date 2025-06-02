@@ -48,4 +48,3 @@ networks:
     name: kasper-test
 volumes:
   pgdata: {}
-
