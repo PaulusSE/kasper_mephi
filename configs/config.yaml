@@ -2,7 +2,7 @@ port: "5432"
 host: "postgres"
 db:
   username: "postgres"
-  password: "pOsTgReSpAsS-!234*"
+  password: "pOsTgReSpAsS234"
   host: "postgres"
   port: "5432"
   dbname: "uir_draft"
