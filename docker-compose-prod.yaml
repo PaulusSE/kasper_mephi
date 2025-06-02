@@ -32,7 +32,7 @@ services:
     container_name: postgres_new
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: pOsTgReSpAsS-!234*
       POSTGRES_DB: uir_draft
     ports:
       - "5433:5432"
