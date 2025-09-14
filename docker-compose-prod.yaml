@@ -19,7 +19,7 @@ services:
     # VITE_API_URL: "http://localhost:8080/api"
     #  VITE_API_URL: "http://server:8080/api"
     #   VITE_API_URL: "https://mephi-22.ru/api"
-        VITE_API_URL: "https://kaspermephi.ru/api"
+        VITE_API_URL: "http://185.179.190.85:8083/api"
     ports:
       - "8082:5173"
     restart: always
