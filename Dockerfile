@@ -4,12 +4,16 @@
 FROM golang:1.21.5-alpine3.18 AS go-builder
 
 WORKDIR /usr/src/app
+
+# Кэшируем зависимости
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
+
+# Статическая сборка Go бинаря
 ENV CGO_ENABLED=0
-RUN go build -o /bin/server ./cmd/kasper/main.go
+RUN go build -trimpath -ldflags="-s -w" -o /bin/server ./cmd/kasper/main.go
 
 # ------------------------
 # СТЕЙДЖ 2: Python build
@@ -19,13 +23,13 @@ FROM python:3.11-slim AS python-builder
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Build dependencies
+# Билд-зависимости
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential python3-dev libgomp1 libopenblas-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
+# Установка Python пакетов
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir \
         torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
@@ -36,23 +40,25 @@ RUN pip install --no-cache-dir \
     python -m spacy download ru_core_news_sm
 
 # ------------------------
-# СТЕЙДЖ 3: Final image
+# СТЕЙДЖ 3: Final runtime image
 # ------------------------
 FROM python:3.11-slim
 
-# Runtime dependencies only
+WORKDIR /app
+
+# Runtime зависимости только
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libgomp1 libopenblas0 && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-# Copy Python packages and binaries
+# Копируем Python пакеты и бинарные скрипты
 COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=python-builder /usr/local/bin /usr/local/bin
+
+# Копируем Go бинарь
 COPY --from=go-builder /bin/server /app/bin/server
 
-# Copy app files
+# Копируем необходимые файлы приложения
 COPY --from=go-builder /usr/src/app/configs ./configs
 COPY --from=go-builder /usr/src/app/internal/app/reco_model_2.py ./internal/app/
 COPY --from=go-builder /usr/src/app/internal/app/parsed_articles.pkl ./internal/app/
