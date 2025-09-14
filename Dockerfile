@@ -1,9 +1,7 @@
 # Используем BuildKit для улучшенного кэширования
 # syntax=docker/dockerfile:1.4
 
-# ------------------------
 # СТЕЙДЖ 1: Build Go binary
-# ------------------------
 FROM golang:1.21.5-alpine3.18 AS go-builder
 
 WORKDIR /usr/src/app
@@ -21,9 +19,7 @@ COPY configs/ ./configs/
 ENV CGO_ENABLED=0
 RUN go build -trimpath -ldflags="-s -w" -o /bin/server ./cmd/kasper/main.go
 
-# ------------------------
 # СТЕЙДЖ 2: Python build
-# ------------------------
 FROM python:3.11-slim AS python-builder
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -50,9 +46,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # Скачиваем модель отдельным слоем для кэширования
 RUN python -m spacy download ru_core_news_sm
 
-# ------------------------
 # СТЕЙДЖ 3: Final runtime image
-# ------------------------
 FROM python:3.11-slim
 
 WORKDIR /app
