@@ -28,11 +28,14 @@ RUN apt-get update && \
 COPY requirements.txt /tmp/requirements.txt
 
 # Установка всех зависимостей и очистка в одном RUN
-RUN pip install --no-cache-dir torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
+RUN pip install --no-cache-dir \
+        torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
+    pip install --no-cache-dir \
+        transformers==4.35.0 \
+        sentence-transformers==2.2.2 && \
     pip install --no-cache-dir -r /tmp/requirements.txt && \
-    python -m spacy download ru_core_news_sm && \
-    apt-get purge -y --auto-remove build-essential python3-dev && \
-    rm -rf /root/.cache /tmp/*
+    python -m spacy download ru_core_news_sm
+
 
 # СТЕЙДЖ 3: Финальный образ (минимальный)
 FROM python:3.11-slim
