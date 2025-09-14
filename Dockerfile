@@ -1,3 +1,6 @@
+# Используем BuildKit для улучшенного кэширования
+# syntax=docker/dockerfile:1.4
+
 # ------------------------
 # СТЕЙДЖ 1: Build Go binary
 # ------------------------
@@ -5,11 +8,14 @@ FROM golang:1.21.5-alpine3.18 AS go-builder
 
 WORKDIR /usr/src/app
 
-# Кэшируем зависимости
+# Кэшируем зависимости (копируем только mod файлы сначала)
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY . .
+# Копируем и собираем только необходимые файлы
+COPY cmd/kasper/main.go ./cmd/kasper/
+COPY internal/ ./internal/
+COPY configs/ ./configs/
 
 # Статическая сборка Go бинаря
 ENV CGO_ENABLED=0
@@ -29,15 +35,20 @@ RUN apt-get update && \
         build-essential python3-dev libgomp1 libopenblas-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Установка Python пакетов
+# Копируем и устанавливаем зависимости с кэшированием
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir \
+
+# Используем кэш pip для ускорения последующих сборок
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir \
         torch==2.1.2+cpu -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install --no-cache-dir \
         transformers==4.35.0 \
         sentence-transformers==2.2.2 && \
-    pip install --no-cache-dir -r /tmp/requirements.txt && \
-    python -m spacy download ru_core_news_sm
+    pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Скачиваем модель отдельным слоем для кэширования
+RUN python -m spacy download ru_core_news_sm
 
 # ------------------------
 # СТЕЙДЖ 3: Final runtime image
@@ -58,11 +69,11 @@ COPY --from=python-builder /usr/local/bin /usr/local/bin
 # Копируем Go бинарь
 COPY --from=go-builder /bin/server /app/bin/server
 
-# Копируем необходимые файлы приложения
-COPY --from=go-builder /usr/src/app/configs ./configs
-COPY --from=go-builder /usr/src/app/internal/app/reco_model_2.py ./internal/app/
-COPY --from=go-builder /usr/src/app/internal/app/parsed_articles.pkl ./internal/app/
-COPY --from=go-builder /usr/src/app/internal/pkg/service/presentation/generate_presentation.py ./internal/pkg/service/presentation/
+# Копируем только необходимые файлы приложения
+COPY configs ./configs
+COPY internal/app/reco_model_2.py ./internal/app/
+COPY internal/app/parsed_articles.pkl ./internal/app/
+COPY internal/pkg/service/presentation/generate_presentation.py ./internal/pkg/service/presentation/
 
 # Environment
 ENV PYTHONPATH=/app
